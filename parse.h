@@ -28,6 +28,13 @@ void add2end(Note_Node **start, Note_Node **tail, Note_Node *new);
 void traverse(Note_Node *start);
 void free_list(Note_Node **list, int elements);
 
+/* Parses the command line invocation of beepcomp, 
+ * initializing in and outfiles.
+ * IN: argv, arc; infile, outfile, and outfile name
+ * (by reference)
+ * OUT: 1 for failure, 0 for succes */
+int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **out, char **out_name);
+
 /* Performs a similar function to sscanf(), albeit with less
  * segfault-y behavior. Compares a string and a format.
  * IN: string to be analyzed, string representing format
@@ -68,8 +75,7 @@ int validate_buffer(int no_buffer_elements, char **buffer);
  * applies key signatures, parentheticals, etc.
  * IN: a full line, line number, buffer (passed
  *     by reference), and number of buffer elements (by reference)
- * OUT: 0 for an error, or the number of elements in
- *      new buffer if successful */
+ * OUT: FAILED, COMMAND, or NOTE from enum parse_status */
 int get_line_buffer(char *line, int line_number, char ***buffer, int *buffer_elements);
 
 /* Converts the string representation of a note to its intermediate

@@ -9,43 +9,12 @@
 #include "commands.h"
 
 int main(int argc, char *argv[]) {
-	int in_flag = 0;
-	int out_flag = 0;
-	int error_flag = 0;
+	/* parsing command line invocation */
 	FILE *infile;
 	FILE *outfile;
 	char *outfile_name;
+	if( parse_cmdline(argv, argc, &infile, &outfile, &outfile_name) ) return 1;
 
-	for( int i = 1; i < argc; i++ ) {
-		if( !strcmp(argv[i], "-o") ) {
-			i++;
-			outfile = fopen(argv[i], "w");
-			outfile_name = argv[i];
-			out_flag = 1;
-		} else if( !strcmp(argv[i], "-f") ) {
-			i++;
-			infile = fopen(argv[i], "r");
-			if( infile == NULL ) { 
-				printf("Specified input file does not exist.\n"); 
-				return 1;
-			}
-			in_flag = 1;
-		} else if( !strcmp(argv[i], "-s") ) {
-			infile = stdin;
-			in_flag = 1;
-		} else if( !strcmp(argv[i], "-u") ) {
-			outfile = stdout;
-			out_flag = 1;
-		} else error_flag = 1;
-	}
-
-	if( !in_flag || !out_flag || error_flag ) {
-		printf("Usage: beepcomp [input mode] [output mode]\n");
-		printf("Input modes:\n\t-f [infile]  - specify a file to read notes from.\n\t-s           - specify input from stdin.\n");
-		printf("Output modes:\n\t-o [outfile] - specify a file to output beep commands to.\n\t-u           - specify output to stdout.\n");
-		return 1;
-	}
-		
 	/* initializing default values */
 	double Tempo = 90;
 	char Key_Str[5] = "C M";
@@ -98,17 +67,17 @@ int main(int argc, char *argv[]) {
 	}
 	if( elements == FAILED ) printf("Input not succesfully written to file.\n");
 
-	//alt_write_to_file(Notes_Array, outfile);
+	/* writing to file and changing outfile to executable */
 	alt_write_to_file(Notes_Array, outfile, linked_list_nodes);
 	if( outfile != stdout && chmod(outfile_name, S_IRWXU) ) { 
 		printf("Error changing outfile permissions to executable.\n");
 	} else if( outfile != stdout ) printf("All notes succesfully written to file. Exiting.\n");
 
+	/* freeing all allocated memory */
 	free(line);
-	if( infile != stdin ) { fclose(infile); }
-	if( outfile != stdout ) { fclose(outfile); }
-	free_list(&Notes_Array, linked_list_nodes); //edit
-	//free(Notes_Array);
+	if( infile != stdin ) fclose(infile); 
+	if( outfile != stdout ) fclose(outfile); 
+	free_list(&Notes_Array, linked_list_nodes); 
 	for( int i = 0; i < ROWS_IN_TABLE; i++ ) { free(freq_table[i]); }
 	free(freq_table);
 	free(key);

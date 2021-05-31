@@ -36,6 +36,43 @@ void free_list(Note_Node **list, int elements) {
 	}
 }
 
+int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **out, char **out_name) {
+	int in_flag = 0;
+	int out_flag = 0;
+	int error_flag = 0;
+
+	for( int i = 1; i < no_args; i++ ) {
+		if( !strcmp(cmdline_args[i], "-o") ) {
+			i++;
+			*out = fopen(cmdline_args[i], "w");
+			*out_name = cmdline_args[i];
+			out_flag = 1;
+		} else if( !strcmp(cmdline_args[i], "-f") ) {
+			i++;
+			*in = fopen(cmdline_args[i], "r");
+			if( *in == NULL ) { 
+				printf("Specified input file does not exist.\n"); 
+				return 1;
+			}
+			in_flag = 1;
+		} else if( !strcmp(cmdline_args[i], "-s") ) {
+			*in = stdin;
+			in_flag = 1;
+		} else if( !strcmp(cmdline_args[i], "-u") ) {
+			*out = stdout;
+			out_flag = 1;
+		} else error_flag = 1;
+	}
+
+	if( !in_flag || !out_flag || error_flag ) {
+		printf("Usage: beepcomp [input mode] [output mode]\n");
+		printf("Input modes:\n\t-f [infile]  - specify a file to read notes from.\n\t-s           - specify input from stdin.\n");
+		printf("Output modes:\n\t-o [outfile] - specify a file to output beep commands to.\n\t-u           - specify output to stdout.\n");
+		return 1;
+	}
+	else return 0;
+}
+
 int frmtcmp(char *str, char *frmt) {
 	int no_frmt_words = 0;
 	if( strcmp(frmt, "")) {
