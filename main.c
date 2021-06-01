@@ -9,11 +9,12 @@
 #include "commands.h"
 
 int main(int argc, char *argv[]) {
+	unsigned int exit = 0;
 	/* parsing command line invocation */
 	FILE *infile;
 	FILE *outfile;
 	char *outfile_name;
-	if( parse_cmdline(argv, argc, &infile, &outfile, &outfile_name) ) return 1;
+	if( parse_cmdline(argv, argc, &infile, &outfile, &outfile_name) ) exit = 1;
 
 	/* initializing default values */
 	double Tempo = 90;
@@ -23,7 +24,7 @@ int main(int argc, char *argv[]) {
 
 	/* parsing all input and writing to output */
 	unsigned int status = parse_infile(infile, outfile, &Tempo, &Key_Str, freq_table, &key);
-	if( status == 1 ) return 1;
+	if( status == 1 ) exit = 1;
 
 	/* changing file permissions to executable on output file */
 	if( outfile != stdout && chmod(outfile_name, S_IRWXU) ) { 
@@ -37,5 +38,5 @@ int main(int argc, char *argv[]) {
 	for( int i = 0; i < ROWS_IN_TABLE+1; i++ ) { free(freq_table[i]); }
 	free(freq_table);
 	free(key);
-	return 0;
+	return exit;
 }

@@ -388,11 +388,13 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			if( line_elements[i][j] != '(' || j != strlen(line_elements[i])-1 ) { 
 				printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character in time mod string.\n", line_number);
 				print_error_line(line, line_number, line_elements[i]);
+				for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
 				free(line_elements);
 				return FAILED;
 			} else if( open_paren == 1 ) {
 				printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "new parenthesis pair begins before closing previous.\n", line_number);
 				print_error_line(line, line_number, line_elements[i]);
+				for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
 				free(line_elements);
 				return FAILED;
 			} else {
@@ -414,11 +416,13 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			} else if( open_paren == 0 ) {
 				printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "unmatched close-parenthesis.\n", line_number);
 				print_error_line(line, line_number, line_elements[i]);
+				for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
 				free(line_elements);
 				return FAILED;
 			} else {
 				printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character in close-paren clause.\n", line_number);
 				print_error_line(line, line_number, line_elements[i]);
+				for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
 				free(line_elements);
 				return FAILED;
 			}
@@ -429,6 +433,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 	if( open_paren == 1 && close_paren == 0 ) {
 		printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "unmatched open-parenthesis.\n", line_number);
 		print_error_line(line, line_number, "(");
+		for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
 		free(line_elements);
 		return FAILED;
 	}
@@ -437,6 +442,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 	if( stat != NORMAL ) {
 		printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character(s) in note.\n", line_number);
 		print_error_line(line, line_number, line_elements[stat-1]);
+		for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
 		free(line_elements);
 		return FAILED;
 	}
@@ -524,6 +530,7 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, double *Tempo, char **Key
 	/* this loop cycles through each line of input, builds a
 	 * buffer from it, then converts it into an intermediate
 	 * representation */
+	int exit = 0;
 	while( 1 ) {
 		fflush(stdin);
 		line_number++;
@@ -536,7 +543,7 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, double *Tempo, char **Key
 		/* program will not abort on bad input if input source
 		 * is stdin; otherwise exit */
 		if( elements == FAILED && infile == stdin ) continue;
-		else if( elements == FAILED ) return 1;
+		else if( elements == FAILED ) { exit = 1; break; }
 		else if( elements == COMMAND ) { 
 			if( !strcmp(buffer[1], "tempo") ) command_tempo(atoi(buffer[2]), Tempo);
 			else if( !strcmp(buffer[1], "key") ) {
@@ -559,12 +566,12 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, double *Tempo, char **Key
 	}
 	if( elements == FAILED ) {
 					printf("Input not succesfully written to file.\n");
-					return 1;
+					exit = 1;
 	}
 
 	/* writing to file */
 	alt_write_to_file(Notes_Array, outfile, linked_list_nodes);
 	free(line);
 	free_list(&Notes_Array, linked_list_nodes); 
-	return 0;
+	return exit;
 }
