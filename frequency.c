@@ -10,11 +10,11 @@ double calc_freq(int hsteps_from_A4, double tuning_A) {
 	return A4 * pow(CONST_A, hsteps_from_A4);
 }
 
-double** gen_freq_table(double tuning_A) {
+int** gen_freq_table(double tuning_A) {
 	int no_octaves = ROWS_IN_TABLE - 1;
-	double** freq_table = malloc(ROWS_IN_TABLE*sizeof(double*));
-	for( int octave = 0; octave < no_octaves; octave++ ) {
-		freq_table[octave] = malloc(12*sizeof(double));
+	int** freq_table = malloc((ROWS_IN_TABLE+1)*sizeof(int*));
+	for( int octave = 0; octave <= no_octaves; octave++ ) {
+		freq_table[octave] = malloc(12*sizeof(int));
 
 		for( int i = 0; i < 12; i++ ) {
 			 /* C | C#/Db | D | D#/Eb | E | F | F#/Gb | G | G#/Ab | A | A#/Bb | B
@@ -29,19 +29,19 @@ double** gen_freq_table(double tuning_A) {
 	/* Assembling the final extra array, for use in referencing when translating */
 	char letters[12] = {'C', 0, 'D', 0, 'E', 'F', 0, 'G', 0, 'A', 0, 'B'};
 	/* REMEMBER TO FREE THE FREQ TABLE FROM MEMORY IN MAIN */
-	freq_table[no_octaves] = malloc(12*sizeof(double));
+	freq_table[ROWS_IN_TABLE] = malloc(12*sizeof(int));
 	for( int i = 0; i < 12; i++ ) 
-		freq_table[no_octaves][i] = (double)letters[i];
+		freq_table[ROWS_IN_TABLE][i] = (int)letters[i];
 
 	return freq_table;
 }
 
-double get_freq_from_string(char note[3], double** table) {
+int get_freq_from_string(char note[3], int** table) {
 	/* using the reference row in the frequency table to find the correct note */
 	if( note[0] == 'r' ) return 0;
 	int note_index;
 	for( int i = 0; i < 12; i++ ) {
-		if( note[0] == table[ROWS_IN_TABLE - 1][i] ) { note_index = i; break; }
+		if( note[0] == table[ROWS_IN_TABLE][i] ) { note_index = i; break; }
 	}
 
 	/* The accidental is set to 0, -1, or 1, depending on how many half steps it alters the note by */

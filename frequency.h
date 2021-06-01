@@ -50,13 +50,13 @@ double calc_freq(int hsteps_from_A4, double tuning_A);
  * E     ...
  * List of note Characters as the final element
  */
-double** gen_freq_table(double tuning_A);
+int** gen_freq_table(double tuning_A);
 
 /* Takes a notescript note and returns its frequency by
  * parsing note format and identifying index in frequency table
  * IN: human-readable note (e.g. C3 or Bb6) and frequency table
  * OUT: note's corresponding frequency*/
-double get_freq_from_string(char* note, double** table);
+int get_freq_from_string(char* note, int** table);
 
 /* Takes a key signature specified by key_string and returns a pointer to
  * a key struct for use in compilation. Void pointer will also point to

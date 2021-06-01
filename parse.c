@@ -36,7 +36,7 @@ void free_list(Note_Node **list, int elements) {
 	}
 }
 
-int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **out, char **out_name) {
+unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **out, char **out_name) {
 	int in_flag = 0;
 	int out_flag = 0;
 	int error_flag = 0;
@@ -73,7 +73,7 @@ int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **out, char 
 	else return 0;
 }
 
-int frmtcmp(char *str, char *frmt) {
+unsigned int frmtcmp(char *str, char *frmt) {
 	int no_frmt_words = 0;
 	if( strcmp(frmt, "")) {
 		for( int i = 0; i < strlen(frmt); i++ ) {
@@ -146,17 +146,15 @@ int frmtcmp(char *str, char *frmt) {
 	return 0;
 }
 	
-int argchecker(char *argument, const char *format) {
+unsigned int argchecker(char *argument, const char *format) {
 	char temp_format[128];
 	strncpy(temp_format, format, 128);
 	int stat = frmtcmp(argument, temp_format);
 	if( stat == 1 ) return ARG_ERROR;
 	else return NORMAL;
-	/* BEGIN EDITED PORTION */
-	//int stat = 
 }
 
-int validate_command(char *command, char *argument) {
+unsigned int validate_command(char *command, char *argument) {
 	int i = 0;
 	while( commands[i] != "\0" ) {
 		// strcmp is negated because it returns zero if it identifies a match
@@ -206,7 +204,7 @@ void print_error_line(char *line, int line_no, char *error_string) {
 	printf(" HERE\n" ANSI_RESET);
 }
 
-int parse_for_command(char *line, int line_number) {
+unsigned int parse_for_command(char *line, int line_number) {
 	char first_str[128];
 	sscanf(line, "%s", first_str);
 
@@ -247,7 +245,7 @@ int parse_for_command(char *line, int line_number) {
 		return NONE;
 }
 
-int validate_buffer(int no_buffer_elements, char **buffer) {
+unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 	int status = NORMAL;
 	int i;
 	int time_pos;
@@ -257,7 +255,8 @@ int validate_buffer(int no_buffer_elements, char **buffer) {
 			if( buffer[i][1] == '#' || buffer[i][1] == 'b' || buffer[i][1] == 'n' ) {
 				octave_pos = 2;
 			}
-			if( buffer[i][octave_pos] >= 1+48 && buffer[i][octave_pos] <= ROWS_IN_TABLE+47 ) {
+			//if( buffer[i][octave_pos] >= 1+48 && buffer[i][octave_pos] <= ROWS_IN_TABLE+47 ) {
+			if( buffer[i][octave_pos] >= '1' && buffer[i][octave_pos] <= ROWS_IN_TABLE+47 ) {
 				time_pos = octave_pos + 1;
 				if( octave_pos == strlen(buffer[i])-1 ) continue;
 				else if( buffer[i][time_pos] == 'o' || buffer[i][time_pos] == ',' || buffer[i][time_pos] == '^' || buffer[i][time_pos] == '.' ) { 
@@ -294,7 +293,7 @@ int validate_buffer(int no_buffer_elements, char **buffer) {
 	return status;
 }
 
-int get_line_buffer(char *line, int line_number, char ***buffer, int *buffer_elements) {
+unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *buffer_elements) {
 	/* Note structure: Ab4^^
 	 * A       b            4         ^^ 
 	 * Note    Accidental   Octave    Time mod(s)
@@ -448,7 +447,7 @@ int get_line_buffer(char *line, int line_number, char ***buffer, int *buffer_ele
 }
 
 
-Note_Node *convert_from_string(char *string, Key_Map *keymap, double **freq_table, double tempo) {
+Note_Node *convert_from_string(char *string, Key_Map *keymap, int **freq_table, double tempo) {
 	Note_Node *int_rep = malloc(sizeof(Note_Node));
 	/* obtain ascii pitch representation */	
 	char pitch[3] = "";
@@ -468,7 +467,7 @@ Note_Node *convert_from_string(char *string, Key_Map *keymap, double **freq_tabl
 		if( pitch[0] == keymap[k].name[0] ) {
 			if( pitch[1] != '#' && pitch[1] != 'b' && pitch[1] != 'n' ) {
 				pitch[2] = pitch[1]; 
-				pitch[1] = keymap[k].accidental; 
+			  pitch[1] = keymap[k].accidental; 
 			}
 		}
 		k++;
@@ -497,10 +496,75 @@ void alt_write_to_file(Note_Node *representation, FILE *outfile, int elements) {
 	fprintf(outfile, "#!/bin/sh\nbeep ");
 	for( int i = 0; i < elements; i++ ) {
 		if( temp->frequency == 0 ) temp->frequency = 1;
-		if( start == 1 ) fprintf(outfile, "-f %f -l %f \\\n", temp->frequency, temp->duration);
-		else fprintf(outfile, "-n -f %f -l %f \\\n", temp->frequency, temp->duration);
+		if( start == 1 ) fprintf(outfile, "-f %d -l %f \\\n", temp->frequency, temp->duration);
+		else fprintf(outfile, "-n -f %d -l %f \\\n", temp->frequency, temp->duration);
 		start = 0;
 		
 		temp = temp->next;
 	}
+}
+
+unsigned int parse_infile(FILE *infile, FILE *outfile, double *Tempo, char **Key_Str, int **freq_table, Key_Map **key) {
+	/* initializing line array (updated every iteration) */
+	char *line = malloc(256*sizeof(char));
+	char *stat;
+	int line_number = 0;
+
+	/* initializing linked list for intermediate rep */
+	int linked_list_nodes = 0;
+	Note_Node *Notes_Array = NULL;
+	Note_Node *tail = NULL;
+	Note_Node *int_rep;
+
+	/* initializing buffer */
+	char **buffer = NULL;
+	int elements= 0;
+	int no_buff_elements;
+
+	/* this loop cycles through each line of input, builds a
+	 * buffer from it, then converts it into an intermediate
+	 * representation */
+	while( 1 ) {
+		fflush(stdin);
+		line_number++;
+		stat = fgets(line, 256, infile);
+		if( stat == NULL ) break; /* breaks at EOF */
+		if( line[0] == '\n' || line[0] == COMMENT_CHAR ) continue; /* ignores empty lines */
+		line[strlen(line)-1] = '\0'; /*ensures null terminate */
+
+		elements = get_line_buffer(line, line_number, &buffer, &no_buff_elements);
+		/* program will not abort on bad input if input source
+		 * is stdin; otherwise exit */
+		if( elements == FAILED && infile == stdin ) continue;
+		else if( elements == FAILED ) return 1;
+		else if( elements == COMMAND ) { 
+			if( !strcmp(buffer[1], "tempo") ) command_tempo(atoi(buffer[2]), Tempo);
+			else if( !strcmp(buffer[1], "key") ) {
+				free(*key);
+				command_key(buffer[2], buffer[3], *Key_Str, key);
+			}
+			for( int i = 0; i < no_buff_elements; i++ ) { free(buffer[i]); 
+			}
+			free(buffer);
+			continue;
+		}
+		/* building intermediate representation from buffer */	
+		for( int i = 0; i < no_buff_elements; i++ ) {
+			int_rep = convert_from_string(buffer[i], *key, freq_table, *Tempo);
+			add2end(&Notes_Array, &tail, int_rep);	
+		}
+		linked_list_nodes += no_buff_elements;
+		for( int i = 0; i < no_buff_elements; i++ ) { free(buffer[i]); }
+		free(buffer);
+	}
+	if( elements == FAILED ) {
+					printf("Input not succesfully written to file.\n");
+					return 1;
+	}
+
+	/* writing to file */
+	alt_write_to_file(Notes_Array, outfile, linked_list_nodes);
+	free(line);
+	free_list(&Notes_Array, linked_list_nodes); 
+	return 0;
 }
