@@ -29,7 +29,7 @@ enum Parse_Status 	{COMMAND, NOTE, FAILED, NONE};
 static const char *commands[] = {
 /*	 command name					argument format */
 	   "tempo",							"%f",				
-	   "key",								"%c %c",
+	   "key",								"%s %c",
 /*   end of aray sentinel */
 		 "\0"
 };
