@@ -540,7 +540,7 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, double *Tempo, char **Key
 	}
 	else alt_write_to_file(Notes_Array, outfile, linked_list_nodes);
 
-	if( buffer ) {
+	if( elements == FAILED ) {
 			for( int i = 0; i < no_buff_elements; i++ ) { free(buffer[i]); }
 			free(buffer);
 	}
