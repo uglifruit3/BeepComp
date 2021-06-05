@@ -294,6 +294,12 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 }
 
 unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *buffer_elements) {
+	/* helps resolve floating spaces at the ends of lines */
+	int back_index = strlen(line)-1;
+	while( line[back_index] == ' ' ) { 
+		line[back_index] = '\0';
+		back_index--;
+	}
 	/* identify number of elements in the line separated by spaces */
 	int no_line_elements = 0;
 	for( int i = 0; i < strlen(line); i++ ) {
