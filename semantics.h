@@ -10,8 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define DELIMETER 				';'
-#define COMMENT_CHAR			'%'
+#define COMMENT_CHAR '%'
 
 /* denotes the command keyword, which tells the compiler to expect
  * a command from the given list of commands */
@@ -27,9 +26,9 @@ enum Parse_Status 	{COMMAND, NOTE, FAILED, NONE};
  * their anticipated arguments. Even indices are command names,
  * odd indices are formats */
 static const char *commands[] = {
-/*	 command name					argument format */
-	   "tempo",							"%f",				
-	   "key",								"%s %c",
+/*	 command name - argument format */
+	   "tempo",       "%f",				
+	   "key",         "%s %c",
 /*   end of aray sentinel */
 		 "\0"
 };

@@ -294,34 +294,7 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 }
 
 unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *buffer_elements) {
-	/* Note structure: Ab4^^
-	 * A       b            4         ^^ 
-	 * Note    Accidental   Octave    Time mod(s)
-	 *         (optional)							(optional) */
-
-	/* Structure for paren-enclosed timing mods:
-	 * ^^( Ab4 Ab4 C4 D4 ) 
-	 *    ^             ^
-	 *    |             |
-	 * Parens at this time must be delineated by spaces! */
-
-	/* A comment character must be preceded by a space or newline in order to be properly parsed */
-
-	/* Order of operations:
-	 * 1. Read the line into a buffer of strings delimited by spaces
-	 * 2. Read buffer, find any notes enclosed by parentheses preceded by a time mod, remove the
-	 *    parens and time mod, and append it to each note individually
-	 * 3. Gracefully exit and report errors if any should appear */
-
-	const char delim[] = " ";
-
-	int back_index = strlen(line)-1;
-	while( line[back_index] == ' ' ) { 
-		line[back_index] = '\0';
-		back_index--;
-	}
-
-	// building the buffer - commented phrases are also identified, and ignored if present
+	/* identify number of elements in the line separated by spaces */
 	int no_line_elements = 0;
 	for( int i = 0; i < strlen(line); i++ ) {
 		if( line[i] == COMMENT_CHAR && line[i-1] == ' ' ) { no_line_elements--; break; }
@@ -332,12 +305,14 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 	char **line_elements = (char**)malloc(no_line_elements*sizeof(char*));
 	int pos_in_line = 0;
 
+	/* this switch handles checking the line for commands first */
 	switch ( parse_for_command(line, line_number) ) {
 		case COMMAND:
 			for( int i = 0; i < no_line_elements; i++ ) {
 				line_elements[i] = (char*)malloc(32*sizeof(char));
 				memset(line_elements[i], '\0', 32);
-
+				/* command case assembles buffer on its own, since dealing
+				 * with parentheses is more involved */
 				int element_index = 0;
 				while( line[pos_in_line] != ' ' && line[pos_in_line] != '\0' && line[pos_in_line] != '\n' ) {
 					line_elements[i][element_index] = line[pos_in_line];
@@ -357,9 +332,14 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			break;
 	}
 
+	/* variables for dealing with parentheses. Time mods associated 
+	 * with a parenthesis group are placed into local_time_mod for 
+	 * appending to contained notes; open and close_paren track 
+	 * whether open or close parens have been identified */
 	char local_time_mod[8] = "";
-	int open_paren = 0; // set to 1 if the compiler has found a valid open paren
-	int close_paren = 0; // set to 1 if the compiler has found a valid close paren
+	int open_paren = 0; 
+	int close_paren = 0; 
+	int exit_status = NOTE;
 
 	/* assembling the buffer, separated by spaces
 	 * this block of code also applies parenthesis expansion and comment ignorance */
@@ -388,15 +368,11 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			if( line_elements[i][j] != '(' || j != strlen(line_elements[i])-1 ) { 
 				printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character in time mod string.\n", line_number);
 				print_error_line(line, line_number, line_elements[i]);
-				for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
-				free(line_elements);
-				return FAILED;
+				exit_status = FAILED;
 			} else if( open_paren == 1 ) {
 				printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "new parenthesis pair begins before closing previous.\n", line_number);
 				print_error_line(line, line_number, line_elements[i]);
-				for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
-				free(line_elements);
-				return FAILED;
+				exit_status = FAILED;
 			} else {
 				free(line_elements[i]);
 				--i;
@@ -416,16 +392,13 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			} else if( open_paren == 0 ) {
 				printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "unmatched close-parenthesis.\n", line_number);
 				print_error_line(line, line_number, line_elements[i]);
-				for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
-				free(line_elements);
-				return FAILED;
+				exit_status = FAILED;
 			} else {
 				printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character in close-paren clause.\n", line_number);
 				print_error_line(line, line_number, line_elements[i]);
-				for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
-				free(line_elements);
-				return FAILED;
+				exit_status = FAILED;
 			}
+			if( exit_status == FAILED ) break;
 
 		} else strcat(line_elements[i], local_time_mod);
 		  
@@ -433,23 +406,21 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 	if( open_paren == 1 && close_paren == 0 ) {
 		printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "unmatched open-parenthesis.\n", line_number);
 		print_error_line(line, line_number, "(");
-		for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
-		free(line_elements);
-		return FAILED;
+		exit_status = FAILED;
 	}
 
-	int stat = validate_buffer(no_line_elements, line_elements);
-	if( stat != NORMAL ) {
-		printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character(s) in note.\n", line_number);
-		print_error_line(line, line_number, line_elements[stat-1]);
-		for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
-		free(line_elements);
-		return FAILED;
+	if( exit_status != FAILED ) {
+		int stat = validate_buffer(no_line_elements, line_elements);
+		if( stat != NORMAL ) {
+			printf(ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character(s) in note.\n", line_number);
+			print_error_line(line, line_number, line_elements[stat-1]);
+			exit_status = FAILED;
+		}
 	}
 
 	*buffer = line_elements;
 	*buffer_elements = no_line_elements;
-	return NOTE;
+	return exit_status;
 }
 
 
@@ -550,8 +521,7 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, double *Tempo, char **Key
 				free(*key);
 				command_key(buffer[2], buffer[3], *Key_Str, key);
 			}
-			for( int i = 0; i < no_buff_elements; i++ ) { free(buffer[i]); 
-			}
+			for( int i = 0; i < no_buff_elements; i++ ) { free(buffer[i]); }
 			free(buffer);
 			continue;
 		}
@@ -568,9 +538,12 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, double *Tempo, char **Key
 					printf("Input not succesfully written to file.\n");
 					exit = 1;
 	}
+	else alt_write_to_file(Notes_Array, outfile, linked_list_nodes);
 
-	/* writing to file */
-	alt_write_to_file(Notes_Array, outfile, linked_list_nodes);
+	if( buffer ) {
+			for( int i = 0; i < no_buff_elements; i++ ) { free(buffer[i]); }
+			free(buffer);
+	}
 	free(line);
 	free_list(&Notes_Array, linked_list_nodes); 
 	return exit;

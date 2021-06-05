@@ -14,7 +14,8 @@ int main(int argc, char *argv[]) {
 	FILE *infile;
 	FILE *outfile;
 	char *outfile_name;
-	if( parse_cmdline(argv, argc, &infile, &outfile, &outfile_name) ) exit = 1;
+	if( parse_cmdline(argv, argc, &infile, &outfile, &outfile_name) ) return 1;
+	
 
 	/* initializing default values */
 	double Tempo = 90;

@@ -15,12 +15,11 @@
 
 /* Used as the intermediate representation for notes before being 
  * written to outfile */
-struct node {
+typedef struct node {
 	int frequency;
 	double duration;
 	struct node *next;
-}; 
-typedef struct node Note_Node;
+} Note_Node;
 
 /* linked list helper functions */
 void add2start(Note_Node **start, Note_Node *new);
