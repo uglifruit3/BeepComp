@@ -76,10 +76,8 @@ unsigned int argchecker(char *argument, const char *format);
  * OUT: NAME_ERROR, ARG_ERROR, or NORMAL */
 unsigned int validate_command(char *command, char *argument);
 
-/* Prints the text wherein an error occurs, with the following format:
- * [line:column] text ERROR
- *                    ^~~~~
- * IN: Error line, line number, and string with khe flagged error */
+/* Prints the text wherein an error occurs
+ * IN: Error line, line number, and string with the flagged error */
 void print_error_line(char *line, int line_no, char *error_string);
 
 /* Parses a line from notescript, to include checking syntax and
@@ -113,6 +111,8 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
  * OUT: a pointer to the note's intermediate representation */
 Note_Node *convert_from_string(char *string, Key_Map *keymap, int **freq_table, double tempo);
 
+/* Converts a line buffer to intermediate representations. Handles
+ * macro expansion and addition to the list of all notes in a song */
 void buffer_to_intrep(char **buffer, int buf_size, Note_Node **start, Note_Node **tail, Key_Map *keymap, int **freq_table, double tempo);
 
 /* converts intermediate representation into a bash 
