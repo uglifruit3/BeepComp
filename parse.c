@@ -209,7 +209,8 @@ void print_error_line(char *line, int line_no, char *error_string) {
 		if( found_string ) { error_index = i; break; }
 	}
 				
-	fprintf(stderr, ANSI_BOLD "line %03i: " ANSI_RESET "%s\n", line_no, line);
+	fprintf(stderr, "LINE %03i: ", line_no);
+	fprintf(stderr, "%s\n", line);
 	for( int i = 0; i < error_index+10; i++ ) { putchar(' '); }
 	printf(ANSI_CYAN);
 	putchar('^');
