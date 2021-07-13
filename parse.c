@@ -50,6 +50,8 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
 	int error_flag = 0;
 
 	for( int i = 1; i < no_args; i++ ) {
+		/* set of statements reads flags, opens files, and checks for 
+		 * errors as appropriate */
 		if( !strcmp(cmdline_args[i], "-o") ) {
 			i++;
 			*out = fopen(cmdline_args[i], "w");
@@ -76,6 +78,8 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
 		} else error_flag = 1;
 	}
 
+	/* ensuring that an input and output are specified. Printing 
+	 * error messages if not */
 	if( !in_flag || !out_flag || error_flag ) {
 		if( !in_flag ) fprintf(stderr, ANSI_BOLD "Error: " ANSI_RESET "input source not specified.\n");
 		if( !out_flag ) fprintf(stderr, ANSI_BOLD "Error: " ANSI_RESET "output not specified.\n");
@@ -88,6 +92,7 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
 }
 
 unsigned int frmtcmp(char *str, char *frmt) {
+	/* counting number of words in response and template */
 	int no_frmt_words = 0;
 	if( strcmp(frmt, "")) {
 		for( int i = 0; i < strlen(frmt); i++ ) {
@@ -107,6 +112,7 @@ unsigned int frmtcmp(char *str, char *frmt) {
 	if( no_str_words < no_frmt_words ) return NO_ARGS_PASSED_ERROR;
 	else if( no_str_words != no_frmt_words ) return ARG_ERROR;
 
+	/* building space-delimited arrays of response and template */
 	const char delim[] = " ";
 	char *token;
 	char **frmt_words = malloc(no_frmt_words*sizeof(char*));
@@ -126,8 +132,8 @@ unsigned int frmtcmp(char *str, char *frmt) {
 	}
 
 	for( int i = 0; i < no_frmt_words; i++ ) {
-		// validity_flag points to whether the passed string matches the format
-		// 1 denotes matching, 0 denotes not matching
+		/* validity_flag points to whether the passed string matches the format
+		   1 denotes matching, 0 denotes not matching */
 		int validity_flag = 1;
 		if( frmt_words[i][0] == '%' ) {
 			switch( frmt_words[i][1] ) {
@@ -171,7 +177,7 @@ unsigned int argchecker(char *argument, const char *format) {
 unsigned int validate_command(char *command, char *argument) {
 	int i = 0;
 	while( commands[i] != "\0" ) {
-		// strcmp is negated because it returns zero if it identifies a match
+		/* strcmp is negated because it returns zero if it identifies a match */
 
 		/* this block specifically validates the argument to set key.
 		 * it does so here because it adds minimal complication 
@@ -189,7 +195,7 @@ unsigned int validate_command(char *command, char *argument) {
 }
 
 void print_error_line(char *line, int line_no, char *error_string) {
-	// substring matching to identify where in the line the error occurs
+	/* substring matching to identify where in the line the error occurs */
 	int error_index;
 	int found_string = 0;
 	for( int i = 0; i < strlen(line)-strlen(error_string)+1; i++ ) {
@@ -203,17 +209,6 @@ void print_error_line(char *line, int line_no, char *error_string) {
 		if( found_string ) { error_index = i; break; }
 	}
 				
-	// getting strings to represent the parts of the line before and after the error
-	char before_error[128];
-	char after_error[128] = "";
-	strncat(before_error, line, error_index);
-	int j = 0;
-	if( error_index + strlen(error_string) != strlen(line) ) {
-		for( int i = error_index+strlen(error_string); i < strlen(line); i++ ) { 
-			after_error[j++] = line[i]; 
-		}
-	}	
-
 	fprintf(stderr, ANSI_BOLD "line %03i: " ANSI_RESET "%s\n", line_no, line);
 	for( int i = 0; i < error_index+10; i++ ) { putchar(' '); }
 	printf(ANSI_CYAN);
@@ -268,6 +263,7 @@ Effect_Package parse_effects_macros(char *element) {
 	Effect_Package effect;
 	effect.name = NO_EFFECT;
 
+	/* identify where the macro starts */
 	while( element[startof_macro] != '[' &&
 	       element[startof_macro] != '{' &&
 	       element[startof_macro] != '<' ) {
@@ -277,6 +273,7 @@ Effect_Package parse_effects_macros(char *element) {
 
 	if( startof_macro < 2 ) return effect;
 
+	/* asses validity of macro invocation */
 	if(((element[startof_macro+1] >= '0' &&
 			 element[startof_macro+1] <= '9' ) ||
 			(element[startof_macro+1] >= 'A' &&
@@ -320,6 +317,9 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 		if( temp.name == PORTAMENTO && i == no_buffer_elements-1 )
 			printf(ANSI_BOLD "Note: " ANSI_RESET "the portamento macro requires a following note on the same line to slide to; it will not be expanded on the last note in a line.\n");
 
+		/* this block of if's and else's confirm the presence of a 
+		 * note and octave, then the validity of time mods in that
+		 * order. It also handles ties */
 		int octave_pos = 1;
 		if( buffer[i][0] >= 'A' && buffer[i][0] <= 'G' ) {
 			if( buffer[i][1] == '#' || buffer[i][1] == 'b' || buffer[i][1] == 'n' ) {
@@ -389,6 +389,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 	}
 	no_line_elements++;
 
+	/* construct an array of the line, delimited by spaces */
 	char **line_elements = (char**)malloc(no_line_elements*sizeof(char*));
 	int pos_in_line = 0;
 	for( int i = 0; i < no_line_elements; i++ ) {
@@ -415,12 +416,17 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			return FAILED;
 	}
 
+	/* it is now presumed the line specifies notes */
 	int exit_status = NOTE;
 
+	/* checking for parentheses. Uses linked lists to track the
+	 * locations of all open and close parens in a buffer, as well
+	 * as the time mods which will be applied within them */
 	Note_Node *open_parens = NULL; Note_Node *open_tail = NULL;
 	Note_Node *close_parens = NULL; Note_Node *close_tail = NULL;
 	int no_open_parens = 0, no_close_parens = 0;
 	int i;
+	/* ensuring parentheses are invoked legally */
 	for( i = 0; i < no_line_elements; i++ ) {
 		int timemods_at_paren = 0;
 		if( line_elements[i][0] == '^' ) {
@@ -451,6 +457,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 		fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character(s) in parenthesis phrase.\n", line_number);
 		print_error_line(line, line_number, line_elements[i]);
 	} 
+	/* ensuring each open paren corresponds to a closed one */
 	else {
 		Note_Node *o_temp = open_parens;
 		Note_Node *c_temp = close_parens;
@@ -467,6 +474,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 	if( exit_status == FAILED ) {
 		fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "open and close-parentheses do not match.\n", line_number);
 	}
+	/* expanding notes' time mods within parens */
 	else {
 		Note_Node *o_temp = open_tail;
 		Note_Node *c_temp = close_tail;
@@ -480,6 +488,10 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 				char cpy[32]; strncpy(cpy, line_elements[i], 32);
 				Effect_Package temp = parse_effects_macros(cpy);
 				char macro_temp[5] = "\0";
+				/* if a macro is present, this block splices the appended
+				 * time mod between the note and macro so as to feed legal
+				 * input to the buffer validation and conversion functions 
+				 * later on */
 				if( temp.name != NO_EFFECT ) {
 					int startof_macro = 0;
 					while( line_elements[i][startof_macro] != '[' &&
@@ -492,12 +504,14 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 						line_elements[i][k] = '\0';
 					}
 				}
+				/* append time mod specified by parens */
 				for( int j = 0; j < local_time_mods; j++ ) {
 					if( line_elements[i][0] == '\0' ) continue; 
 					strcat(line_elements[i], "^\0");
 				}
 				strcat(line_elements[i], macro_temp);
 			}
+			/* cleaning up */
 			line_elements[i][0] = line_elements[o_temp->INDEX][0] = '\0';
 			del_from_end(&open_parens, &open_tail);
 			del_from_end(&close_parens, &close_tail);
@@ -506,6 +520,8 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			c_temp = close_tail;
 		}
 
+		/* adjusting the number of elements in the buffer array and 
+		 * removing parentheses after expansion */
 		if( no_open_parens > 0 ) {
 			int no_new_elements = no_line_elements - (2 * no_open_parens);
 			char **new_elements = malloc(no_new_elements*sizeof(char*));
@@ -597,11 +613,17 @@ Note_Node *convert_from_string(char *string, Key_Map *keymap, int **freq_table, 
 void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node **tail, Key_Map *keymap, int **freq_table, double tempo) {
 	Effect_Package effect;
 	Note_Node *int_rep;
+
 	for( int i = 0; i < buff_size; i++ ) {
 		effect = parse_effects_macros(buffer[i]);
+
+		/* if an effect macro has been invoked */
 		if( effect.name ) {
+			/* param1 is the same for all effects */
 			Note_Node *base_note = convert_from_string(buffer[i], keymap, freq_table, tempo);
 			effect.param1 = *base_note;
+			/* extra condition prevents portamento from being used if 
+			 * there is no follow-on note */
 			if( effect.name == PORTAMENTO && i != buff_size-1 ) {
 				Note_Node *temp = convert_from_string(buffer[i+1], keymap, freq_table, tempo);
 				effect.param4 = temp->frequency;
@@ -611,12 +633,17 @@ void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node
 				effect.param2 = round_dbl(calc_freq(base_hsteps+effect.param2));
 				effect.param3 = round_dbl(calc_freq(base_hsteps+effect.param3));
 			}
+
 			fx_macro(start, tail, effect);
 			free(base_note);
+
+		/* if a tie has been invoked */
 		} else if( buffer[i][0] == '-' ) {
 			i++;
 			Note_Node *temp_rep = convert_from_string(buffer[i], keymap, freq_table, tempo);
 			(*tail)->duration += temp_rep->duration;
+
+		/* regular case */
 		} else {
 			int_rep = convert_from_string(buffer[i], keymap, freq_table, tempo);
 			add2end(start, tail, int_rep);	
@@ -629,8 +656,8 @@ void write_to_file(Note_Node *representation, FILE *outfile, Note_Node *tail) {
 	int start = 1;
 	
 	fprintf(outfile, "#!/bin/sh\nbeep ");
+	/* list traversal */
 	while( temp != tail ) {
-		if( temp->frequency == 0 ) temp->frequency = 1;
 		if( start == 1 ) fprintf(outfile, "-f %d -l %f \\\n", temp->frequency, temp->duration);
 		else fprintf(outfile, "-n -f %d -l %f \\\n", temp->frequency, temp->duration);
 		start = 0;
