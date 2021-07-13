@@ -4,11 +4,25 @@
 #include "frequency.h"
 #include "semantics.h"
 
-double calc_freq(int hsteps_from_A4, double tuning_A) {
+double calc_freq(int hsteps_from_A4) {
 	/* uses equation of the form:
 	 * new_freq = known_freq * (a)^(half steps from known_freq) */
 	return A4 * pow(CONST_A, hsteps_from_A4);
 }
+
+int round_dbl(double n) {
+	int rounded;
+	if( n - (int)n > 0.5 ) rounded = (int)(n + 0.5);
+	else rounded = (int)n;
+
+	return rounded;
+}
+
+int hsteps_from_A4(int frequency) {
+	double steps = log10(frequency/A4)/log10(CONST_A);
+	return round_dbl(steps);
+}
+
 
 int** gen_freq_table(double tuning_A) {
 	int no_octaves = ROWS_IN_TABLE - 1;
@@ -22,7 +36,7 @@ int** gen_freq_table(double tuning_A) {
 
 			int oct_diff = octave - TUNING_A_OCTAVE;
 			int hsteps = (oct_diff * 12) + (i - 9);
-			freq_table[octave][i] = calc_freq(hsteps, tuning_A);
+			freq_table[octave][i] = round_dbl(calc_freq(hsteps));
 			}
 		}
 
@@ -30,8 +44,9 @@ int** gen_freq_table(double tuning_A) {
 	char letters[12] = {'C', 0, 'D', 0, 'E', 'F', 0, 'G', 0, 'A', 0, 'B'};
 	/* REMEMBER TO FREE THE FREQ TABLE FROM MEMORY IN MAIN */
 	freq_table[ROWS_IN_TABLE] = malloc(12*sizeof(int));
-	for( int i = 0; i < 12; i++ ) 
-		freq_table[ROWS_IN_TABLE][i] = (int)letters[i];
+	for( int i = 0; i < 12; i++ ) {
+		freq_table[ROWS_IN_TABLE][i] = letters[i];
+	}
 
 	return freq_table;
 }

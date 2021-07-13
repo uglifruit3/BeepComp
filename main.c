@@ -2,11 +2,16 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#include "parse.h"
 #include "frequency.h"
+#include "parse.h"
 #include "semantics.h"
 #include "timing.h"
 #include "commands.h"
+#include "effects.h"
+
+char *Key_Str;
+int **freq_table;
+Key_Map *key;
 
 int main(int argc, char *argv[]) {
 	unsigned int exit = 0;
@@ -16,20 +21,18 @@ int main(int argc, char *argv[]) {
 	char *outfile_name;
 	if( parse_cmdline(argv, argc, &infile, &outfile, &outfile_name) ) return 1;
 	
-
 	/* initializing default values */
-	double Tempo = 90;
-	char *Key_Str = malloc(5*sizeof(char)); strncpy(Key_Str, "C M", 5);
-	int **freq_table = gen_freq_table(A4);
-	Key_Map *key = gen_key_sig(Key_Str);
+	Key_Str = malloc(5*sizeof(char)); strncpy(Key_Str, "C M", 5);
+	freq_table = gen_freq_table(A4);
+	key = gen_key_sig(Key_Str);
 
 	/* parsing all input and writing to output */
-	unsigned int status = parse_infile(infile, outfile, &Tempo, &Key_Str, freq_table, &key);
+	unsigned int status = parse_infile(infile, outfile, &Key_Str, freq_table, &key);
 	if( status == 1 ) exit = 1;
 
 	/* changing file permissions to executable on output file */
 	if( outfile != stdout && chmod(outfile_name, S_IRWXU) ) { 
-		printf("Error changing outfile permissions to executable.\n");
+		fprintf(stderr, "Error changing outfile permissions to executable.\n");
 	} else if( outfile != stdout ) printf("All notes succesfully written to file. Exiting.\n");
 
 	/* freeing all allocated memory */

@@ -33,7 +33,13 @@ struct Alt_Key {
  *     This should almost ALWAYS be A4 (440), but is left 
  *     flexible for extending to nonconventional tunings
  * OUT: The note's frequency */
-double calc_freq(int hsteps_from_A4, double tuning_A);
+double calc_freq(int hsteps_from_A4);
+
+/* rounds a double to an int */
+int round_dbl(double n); 
+
+/* Calculates how many half-steps a frequency is from A4 */
+int hsteps_from_A4(int frequency);
 
 /* Builds the frequency table for reference in translating
  * entered notes into proper frequencies.

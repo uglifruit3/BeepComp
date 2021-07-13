@@ -20,12 +20,35 @@ typedef struct node {
 	double duration;
 	struct node *next;
 } Note_Node;
+/* typedef'd in effects.h; defined here to contain Note_Node */
+struct fx_node {
+	int name;
+	Note_Node param1; 
+	int param2;
+	int param3;
+	int param4;
+};
+
+#include "effects.h"
+
+/* the Note_Node struct is also used for temporarily storing the
+ * position and associated time mods of parentheses in buffers;
+ * these macros aim to provide semantic clarity to that end */
+#define INDEX frequency
+#define NO_TIME_MODS duration
+
+/* color codes for printing errors and notes */
+#define ANSI_RED      "\x1b[1;31m"
+#define ANSI_CYAN     "\x1b[36m"	
+#define ANSI_BOLD     "\x1b[1m"
+#define ANSI_RESET    "\x1b[0m"
 
 /* linked list helper functions */
 void add2start(Note_Node **start, Note_Node *new);
 void add2end(Note_Node **start, Note_Node **tail, Note_Node *new);
 void traverse(Note_Node *start);
-void free_list(Note_Node **list, int elements);
+void del_from_end(Note_Node **start, Note_Node **tail);
+void free_list(Note_Node **list, Note_Node **tail);
 
 /* Parses the command line invocation of beepcomp, 
  * initializing in and outfiles.
@@ -56,7 +79,7 @@ unsigned int validate_command(char *command, char *argument);
 /* Prints the text wherein an error occurs, with the following format:
  * [line:column] text ERROR
  *                    ^~~~~
- * IN: Error line, line number, and string with the flagged error */
+ * IN: Error line, line number, and string with khe flagged error */
 void print_error_line(char *line, int line_no, char *error_string);
 
 /* Parses a line from notescript, to include checking syntax and
@@ -64,6 +87,13 @@ void print_error_line(char *line, int line_no, char *error_string);
  * IN: a full line 
  * OUT: COMMAND, FAILED, or NONE from enum Parse_Status */
 unsigned int parse_for_command(char *line, int line_number);
+
+/* Parses a given element in a buffer, identifying a correctly
+ * placed effects macro and constructing a more useful 
+ * representation. It also alters the element, removing the macro
+ * in order to allow it to be validated (returned effect info not
+ * used) or converted into an intermediate representation */
+Effect_Package parse_effects_macros(char *element);
 
 /* Parses a line buffer for illegal syntax.
  * IN: a buffer and number of elements therein
@@ -83,12 +113,14 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
  * OUT: a pointer to the note's intermediate representation */
 Note_Node *convert_from_string(char *string, Key_Map *keymap, int **freq_table, double tempo);
 
+void buffer_to_intrep(char **buffer, int buf_size, Note_Node **start, Note_Node **tail, Key_Map *keymap, int **freq_table, double tempo);
+
 /* converts intermediate representation into a bash 
  * script and writes to outfile. */
-void alt_write_to_file(Note_Node *representation, FILE *outfile, int elements);
+void write_to_file(Note_Node *representation, FILE *outfile, Note_Node *tail);
 
 /* handles all input and translation, relying on functions
  * defined above. Note Key_Str, Tempo, and key are passed
  * by reference here */
-unsigned int parse_infile(FILE *infile, FILE *outfile, double *Tempo, char **Key_Str, int **freq_table, Key_Map **key);
+unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **freq_table, Key_Map **key);
 #endif

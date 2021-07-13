@@ -11,6 +11,8 @@
 #define HALF  2.0
 #define EIGTH 0.5
 
+static double Tempo = 90;
+
 /* Recursively finds the duration of a note that includes any subdivisions beneath
  * the quarter note.
  * IN: The string of time modifiers, #the index therein, and the note's current length

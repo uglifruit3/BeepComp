@@ -19,7 +19,7 @@
 /* General denotation of the error-checking state;
  * State is used for arg checker, Parse_Status is more general and
  * is dealt with in main */
-enum State 					{NORMAL, TIME_ERROR, NOTE_ERROR, NAME_ERROR, ARG_ERROR}; 
+enum State 					{NORMAL, TIME_ERROR, NOTE_ERROR, NAME_ERROR, ARG_ERROR, NO_ARGS_PASSED_ERROR}; 
 enum Parse_Status 	{COMMAND, NOTE, FAILED, NONE};
 
 /* list of commands the compiler can expect to see, along with 
@@ -29,6 +29,7 @@ static const char *commands[] = {
 /*	 command name - argument format */
 	   "tempo",       "%f",				
 	   "key",         "%s %c",
+		 "arprate",     "%i",
 /*   end of aray sentinel */
 		 "\0"
 };
