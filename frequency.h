@@ -9,7 +9,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define A4 440.0 // Note A right above middle C is 440 hz
+#define A4 440.0 /* Note A right above middle C is 440 hz */
 #define TUNING_A_OCTAVE 4
 #define CONST_A 1.059463094
 #define ROWS_IN_TABLE 10
@@ -59,8 +59,7 @@ int** gen_freq_table(double tuning_A);
 int get_freq_from_string(char* note, int** table);
 
 /* Takes a key signature specified by key_string and returns a pointer to
- * a key struct for use in compilation. Void pointer will also point to
- * error codes. */
+ * a key struct for use in compilation. Void pointer will also point to error codes. */
 void *gen_key_sig(char *key_string);
 
 #endif

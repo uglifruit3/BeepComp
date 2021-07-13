@@ -147,7 +147,7 @@ void *gen_key_sig(char *key_string) {
 		notes_in_sig = temp;
 		acc_symbol = 'b';
 	}
-	/* REMEMBER TO FREE RETURNED KEYMAP IN MAIN */
+
 	Key_Map *keymap = malloc((no_accidentals + 1)*sizeof(Key_Map));
 	for( int i = 0; i < no_accidentals; i++ ) {
 		keymap[i].name = notes_in_sig[i];

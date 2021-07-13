@@ -8,7 +8,6 @@ double get_subdivision(char *time_mods, int index, double duration) {
 	get_subdivision(time_mods, ++index, duration * EIGTH);
 }
 
-//double get_duration_from_string(char time_mods[], double Tempo) {
 double get_duration_from_string(char *time_mods, double tempo) {
 	/* The duration of any note starts off as exactly one quarter note's worth.
 	 * If nothing is specified, the function returns a quarter note */
@@ -30,10 +29,8 @@ double get_duration_from_string(char *time_mods, double tempo) {
 			case ',': 
 				note_duration = HALF * beat_duration; break;
 			case '^': 
-				//note_duration =  get_subdivision(time_mods, index, note_duration);
 				note_duration *= 0.5; break;
 			case '.': 
-				//note_duration += get_subdivision(time_mods[index], index, note_duration);
 				note_duration += 0.5 * note_duration; break;
 		}
 		index++;

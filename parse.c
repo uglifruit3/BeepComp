@@ -111,8 +111,8 @@ unsigned int frmtcmp(char *str, char *frmt) {
 	}
 
 	for( int i = 0; i < no_frmt_words; i++ ) {
-		// validity_flag points to whether the passed string matches the format
-		// 1 denotes matching, 0 denotes not matching
+		/* validity_flag points to whether the passed string matches the format.
+		1 denotes matching, 0 denotes not matching */
 		int validity_flag = 1;
 		if( frmt_words[i][0] == '%' ) {
 			switch( frmt_words[i][1] ) {
@@ -157,7 +157,7 @@ unsigned int argchecker(char *argument, const char *format) {
 unsigned int validate_command(char *command, char *argument) {
 	int i = 0;
 	while( commands[i] != "\0" ) {
-		// strcmp is negated because it returns zero if it identifies a match
+		/* strcmp is negated because it returns zero if it identifies a match */
 		if( !strcmp(command, commands[i] )) { return argchecker(argument, commands[i+1]); }
 		i += 2;
 	}
@@ -165,7 +165,7 @@ unsigned int validate_command(char *command, char *argument) {
 }
 
 void print_error_line(char *line, int line_no, char *error_string) {
-	// substring matching to identify where in the line the error occurs
+	/* substring matching to identify where in the line the error occurs */
 	int error_index;
 	int found_string = 0;
 	for( int i = 0; i < strlen(line)-strlen(error_string)+1; i++ ) {
@@ -179,7 +179,7 @@ void print_error_line(char *line, int line_no, char *error_string) {
 		if( found_string ) { error_index = i; break; }
 	}
 				
-	// getting strings to represent the parts of the line before and after the error
+	/* getting strings to represent the parts of the line before and after the error */
 	char before_error[128];
 	char after_error[128] = "";
 	strncat(before_error, line, error_index);
@@ -255,7 +255,6 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 			if( buffer[i][1] == '#' || buffer[i][1] == 'b' || buffer[i][1] == 'n' ) {
 				octave_pos = 2;
 			}
-			//if( buffer[i][octave_pos] >= 1+48 && buffer[i][octave_pos] <= ROWS_IN_TABLE+47 ) {
 			if( buffer[i][octave_pos] >= '1' && buffer[i][octave_pos] <= ROWS_IN_TABLE+47 ) {
 				time_pos = octave_pos + 1;
 				if( octave_pos == strlen(buffer[i])-1 ) continue;

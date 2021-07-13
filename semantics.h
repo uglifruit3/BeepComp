@@ -37,10 +37,10 @@ static const char accidental_modifiers[] = {
 	'#', 'b', 'n'
 };
 static const char timing_modifiers[] = {
-	'o', // whole note
-	',', // half note
-	'^', // eight note (concatenated for further subdivisions)
-	'.'  // dot (concatenated for further subdivisions)
+	'o', /* whole note */
+	',', /* half note */
+	'^', /* eight note (concatenated for further subdivisions) */
+	'.'  /* dot (concatenated for further subdivisions) */
 };
 
 #endif
