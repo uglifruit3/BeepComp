@@ -45,10 +45,11 @@ void free_list(Note_Node **list, Note_Node **tail) {
 }
 
 unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **out, char **out_name) {
-	int in_flag = 0;
-	int out_flag = 0;
+	//int in_flag = 0;
+	//int out_flag = 0;
 	int error_flag = 0;
 	int help_flag = 0;
+	int quiet_flag = 0;
 
 	for( int i = 1; i < no_args; i++ ) {
 		/* set of statements reads flags, opens files, and checks for 
@@ -60,53 +61,37 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
 					if( i > no_args-1 ) { continue; }
 					*out = fopen(cmdline_args[i], "w");
 					*out_name = cmdline_args[i];
-					out_flag = 1;
+					//out_flag = 1;
 					break;
 				case 'f':
 					i++;
 					*in = fopen(cmdline_args[i], "r");
-					in_flag = 1;
+					//in_flag = 1;
 					if( *in == NULL ) error_flag = 1;
-					break;
-				case 's':
-					*in = stdin;
-					in_flag = 1;
-					break;
-				case 'u':
-					*out = stdout;
-					out_flag = 1;
 					break;
 				case 'h':
 					help_flag = 1;
 					break;
+				default:
+					printf(ANSI_BOLD "Error: " ANSI_RESET "invalid options have been supplied.\n");
+					error_flag = 1; 
+					break;
 			}
 		} else error_flag = 1;
 	}
-
 	/* ensuring that an input and output are specified. Printing 
 	 * error messages if not */
 	if( error_flag || help_flag ) {
 		if( error_flag && *in == NULL ) {
-			fprintf(stderr, ANSI_BOLD "Error: " ANSI_RESET "Input file does not exist. Exiting.\n");
 			return 1;
 		}
-		printf("Usage: beepcomp [-h] [input mode] [output mode]\n");
-		printf("Input modes:\n\t-f " ANSI_UNDR "infile" ANSI_RESET "  - specify a file to read notes from.\n\t-s         - specify input from stdin.\n");
-		printf("Output modes:\n\t-o " ANSI_UNDR "outfile" ANSI_RESET " - specify a file to output beep commands to.\n\t-u         - specify output to stdout.\n");
-		printf("Help:\n\t-h         - display this output and exit.\n");
+		printf("Usage: beepcomp [-h] [-f " ANSI_UNDR "infile" ANSI_RESET "] [-o " ANSI_UNDR "outfile" ANSI_RESET "]\n" );
 		if( help_flag ) return 2;
 		else return 1;
 	}
-	if( !in_flag || !out_flag ) {
-		if( !in_flag ) { 
-			printf(ANSI_BOLD "Note: " ANSI_RESET "input source not specified. Defaulting to stdin.\n");
-			*in = stdin;
-		}
-		if( !out_flag ) { 
-			printf(ANSI_BOLD "Note: " ANSI_RESET "output not specified. Defaulting to stdout.\n");
-			*out = stdout;
-		}
-	}
+
+	if( *in  == NULL ) *in = stdin;
+	if( *out == NULL ) *out = stdout;
 	return 0;
 }
 
@@ -262,6 +247,7 @@ unsigned int parse_for_command(char *line, int line_number) {
 			case NAME_ERROR:
 				fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "command \"%s\" does not exist.\n", line_number, cmd_name);
 				print_error_line(line, line_number, cmd_name);
+				return NONE;
 				break;
 			case ARG_ERROR:
 				fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "invalid argument(s) given for command \"%s\".\n", line_number, cmd_name);
@@ -388,7 +374,10 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 				next_note[k] = buffer[i+1][k];
 			}
 
-			if( strcmp(prev_note, next_note) ) { status = i+1; break; }
+			if( strcmp(prev_note, next_note) ) { 
+				fprintf(stderr, ANSI_BOLD "Note: " ANSI_RESET "tied notes must be the same pitch.\n");
+				status = i+1; break; 
+			}
 		} else { status = i+1; break; }
 	}
 	return status;
@@ -405,7 +394,10 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 	int no_line_elements = 0;
 	for( int i = 0; i < strlen(line); i++ ) {
 		if( line[i] == COMMENT_CHAR && line[i-1] == ' ' ) { no_line_elements--; break; }
-		else if( line[i] == ' ' ) no_line_elements++;
+		else if( line[i] == ' ' ) { 
+			no_line_elements++;
+			while( line[i] == ' ' ) { i++; }
+		}
 	}
 	no_line_elements++;
 
@@ -421,8 +413,8 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			element_index++;
 			pos_in_line++;
 		}
-		pos_in_line++;
 		line_elements[i][element_index+1] = '\0';
+		while( line[pos_in_line] == ' ' ) { pos_in_line++; }
 	}
 
 	/* this switch handles checking the line for commands first */

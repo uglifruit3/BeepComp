@@ -16,8 +16,8 @@ Key_Map *key;
 int main(int argc, char *argv[]) {
 	unsigned int exit = 0;
 	/* parsing command line invocation */
-	FILE *infile;
-	FILE *outfile;
+	FILE *infile = NULL;
+	FILE *outfile = NULL;
 	char *outfile_name;
 	exit = parse_cmdline(argv, argc, &infile, &outfile, &outfile_name);
 	if( exit == 1 ) return exit;
