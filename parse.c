@@ -48,47 +48,66 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
 	int in_flag = 0;
 	int out_flag = 0;
 	int error_flag = 0;
+	int help_flag = 0;
 
 	for( int i = 1; i < no_args; i++ ) {
 		/* set of statements reads flags, opens files, and checks for 
 		 * errors as appropriate */
-		if( !strcmp(cmdline_args[i], "-o") ) {
-			i++;
-			*out = fopen(cmdline_args[i], "w");
-			*out_name = cmdline_args[i];
-			out_flag = 1;
-			if( i >= no_args ) {
-				out_flag = 0;
-				error_flag = 1;
+		if( cmdline_args[i][0] == '-' ) {
+			switch( cmdline_args[i][1] ) {
+				case 'o':
+					i++;
+					if( i > no_args-1 ) { continue; }
+					*out = fopen(cmdline_args[i], "w");
+					*out_name = cmdline_args[i];
+					out_flag = 1;
+					break;
+				case 'f':
+					i++;
+					*in = fopen(cmdline_args[i], "r");
+					in_flag = 1;
+					if( *in == NULL ) error_flag = 1;
+					break;
+				case 's':
+					*in = stdin;
+					in_flag = 1;
+					break;
+				case 'u':
+					*out = stdout;
+					out_flag = 1;
+					break;
+				case 'h':
+					help_flag = 1;
+					break;
 			}
-		} else if( !strcmp(cmdline_args[i], "-f") ) {
-			i++;
-			*in = fopen(cmdline_args[i], "r");
-			in_flag = 1;
-			if( *in == NULL ) { 
-				in_flag = 0;
-				error_flag = 1;
-			}
-		} else if( !strcmp(cmdline_args[i], "-s") ) {
-			*in = stdin;
-			in_flag = 1;
-		} else if( !strcmp(cmdline_args[i], "-u") ) {
-			*out = stdout;
-			out_flag = 1;
 		} else error_flag = 1;
 	}
 
 	/* ensuring that an input and output are specified. Printing 
 	 * error messages if not */
-	if( !in_flag || !out_flag || error_flag ) {
-		if( !in_flag ) fprintf(stderr, ANSI_BOLD "Error: " ANSI_RESET "input source not specified.\n");
-		if( !out_flag ) fprintf(stderr, ANSI_BOLD "Error: " ANSI_RESET "output not specified.\n");
-		printf("Usage: beepcomp [input mode] [output mode]\n");
-		printf("Input modes:\n\t-f [infile]  - specify a file to read notes from.\n\t-s           - specify input from stdin.\n");
-		printf("Output modes:\n\t-o [outfile] - specify a file to output beep commands to.\n\t-u           - specify output to stdout.\n");
-		return 1;
+	if( error_flag || help_flag ) {
+		if( error_flag && *in == NULL ) {
+			fprintf(stderr, ANSI_BOLD "Error: " ANSI_RESET "Input file does not exist. Exiting.\n");
+			return 1;
+		}
+		printf("Usage: beepcomp [-h] [input mode] [output mode]\n");
+		printf("Input modes:\n\t-f " ANSI_UNDR "infile" ANSI_RESET "  - specify a file to read notes from.\n\t-s         - specify input from stdin.\n");
+		printf("Output modes:\n\t-o " ANSI_UNDR "outfile" ANSI_RESET " - specify a file to output beep commands to.\n\t-u         - specify output to stdout.\n");
+		printf("Help:\n\t-h         - display this output and exit.\n");
+		if( help_flag ) return 2;
+		else return 1;
 	}
-	else return 0;
+	if( !in_flag || !out_flag ) {
+		if( !in_flag ) { 
+			printf(ANSI_BOLD "Note: " ANSI_RESET "input source not specified. Defaulting to stdin.\n");
+			*in = stdin;
+		}
+		if( !out_flag ) { 
+			printf(ANSI_BOLD "Note: " ANSI_RESET "output not specified. Defaulting to stdout.\n");
+			*out = stdout;
+		}
+	}
+	return 0;
 }
 
 unsigned int frmtcmp(char *str, char *frmt) {

@@ -19,7 +19,9 @@ int main(int argc, char *argv[]) {
 	FILE *infile;
 	FILE *outfile;
 	char *outfile_name;
-	if( parse_cmdline(argv, argc, &infile, &outfile, &outfile_name) ) return 1;
+	exit = parse_cmdline(argv, argc, &infile, &outfile, &outfile_name);
+	if( exit == 1 ) return exit;
+	else if( exit == 2 ) return 0;
 	
 	/* initializing default values */
 	Key_Str = malloc(5*sizeof(char)); strncpy(Key_Str, "C M", 5);

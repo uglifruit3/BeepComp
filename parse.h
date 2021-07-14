@@ -41,6 +41,7 @@ struct fx_node {
 #define ANSI_RED      "\x1b[1;31m"
 #define ANSI_CYAN     "\x1b[36m"	
 #define ANSI_BOLD     "\x1b[1m"
+#define ANSI_UNDR     "\x1b[4;37m"
 #define ANSI_RESET    "\x1b[0m"
 
 /* linked list helper functions */
