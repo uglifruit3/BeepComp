@@ -122,7 +122,7 @@ BeepComp notation includes a means to make comments for helping with song struct
 
 ## Example
 I put together a little example of what BeepComp can do, using the first verse of Jonathan Coulton's "Still Alive" from the computer game *Portal* in hopes that it will be illustrative of proper syntax/command usage. You can also download and listen to the shell script which BeepComp creates from it, provided you have `beep` installed on your machine.
-```stillalive/still_alive.txt
+```still_alive/still_alive.txt
 
 ```
 
