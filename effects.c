@@ -58,3 +58,5 @@ void expand_vibrato(Note_Node **start, Note_Node **tail, Effect_Package effect) 
 	int_rep->duration = effect.param1.duration;	
 	add2end(start, tail, int_rep);
 }
+
+/* this is a test */
