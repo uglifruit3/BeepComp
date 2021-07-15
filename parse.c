@@ -274,9 +274,7 @@ Effect_Package parse_effects_macros(char *element) {
 	effect.name = NO_EFFECT;
 
 	/* identify where the macro starts */
-	while( element[startof_macro] != '[' &&
-	       element[startof_macro] != '{' &&
-	       element[startof_macro] != '<' ) {
+	while( element[startof_macro] != '[' ) {
 		startof_macro++; 
 		if( startof_macro > strlen(element) ) break;
 	}
@@ -302,10 +300,7 @@ Effect_Package parse_effects_macros(char *element) {
 		if( element[startof_macro] == '[' ) { 
 			effect.name = ARPEGGIO; fx_macro = expand_arpeggio;
 			effect.param4 = Arpeggio_Rate;
-		} else if( element[startof_macro] == '<' ) {
-			effect.name = PORTAMENTO; fx_macro = expand_portamento;
-		} else { 
-			effect.name = VIBRATO; fx_macro = expand_vibrato; }
+		}
 
 		for( int i = startof_macro; i < strlen(element); i++ ) {
 			element[i] = '\0';
@@ -324,8 +319,6 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 		 * errors as it otherwise would */
 		Effect_Package temp; temp.name = NO_EFFECT;
 		temp = parse_effects_macros(buffer[i]);
-		if( temp.name == PORTAMENTO && i == no_buffer_elements-1 )
-			printf(ANSI_BOLD "Note: " ANSI_RESET "the portamento macro requires a following note on the same line to slide to; it will not be expanded on the last note in a line.\n");
 
 		/* this block of if's and else's confirm the presence of a 
 		 * note and octave, then the validity of time mods in that
@@ -610,7 +603,6 @@ Note_Node *convert_from_string(char *string, Key_Map *keymap, int **freq_table, 
 		}
 		k++;
 	}
-	/* getting frequency */
 	int_rep->frequency = get_freq_from_string(pitch, freq_table);
 
 	/* obtain ascii timing representation */
@@ -621,7 +613,6 @@ Note_Node *convert_from_string(char *string, Key_Map *keymap, int **freq_table, 
 		time[j] = string[i];
 		i++; j++;
 	}
-	/* getting duration */
 	int_rep->duration  = get_duration_from_string(time, tempo);
 
 	return int_rep;
@@ -634,18 +625,11 @@ void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node
 	for( int i = 0; i < buff_size; i++ ) {
 		effect = parse_effects_macros(buffer[i]);
 
-		/* if an effect macro has been invoked */
 		if( effect.name ) {
 			/* param1 is the same for all effects */
 			Note_Node *base_note = convert_from_string(buffer[i], keymap, freq_table, tempo);
 			effect.param1 = *base_note;
-			/* extra condition prevents portamento from being used if 
-			 * there is no follow-on note */
-			if( effect.name == PORTAMENTO && i != buff_size-1 ) {
-				Note_Node *temp = convert_from_string(buffer[i+1], keymap, freq_table, tempo);
-				effect.param4 = temp->frequency;
-				free(temp);
-			} else if( effect.name == ARPEGGIO ) {
+			if( effect.name == ARPEGGIO ) {
 				int base_hsteps = hsteps_from_A4(effect.param1.frequency);
 				effect.param2 = round_dbl(calc_freq(base_hsteps+effect.param2));
 				effect.param3 = round_dbl(calc_freq(base_hsteps+effect.param3));
@@ -654,7 +638,6 @@ void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node
 			fx_macro(start, tail, effect);
 			free(base_note);
 
-		/* if a tie has been invoked */
 		} else if( buffer[i][0] == '-' ) {
 			i++;
 			Note_Node *temp_rep = convert_from_string(buffer[i], keymap, freq_table, tempo);

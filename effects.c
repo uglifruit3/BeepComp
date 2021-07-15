@@ -42,21 +42,3 @@ void expand_arpeggio(Note_Node **start, Note_Node **tail, Effect_Package effect)
 		add2end(start, tail, int_rep);	
 	}
 }
-void expand_portamento(Note_Node **start, Note_Node **tail, Effect_Package effect) {
-	printf(ANSI_BOLD "Note: " ANSI_RESET "due to limitations in interacting with the pc speaker, portamento is not supported at the moment. As such, invoking this effect will do nothing.\n");
-
-	Note_Node *int_rep = malloc(sizeof(Note_Node));
-	int_rep->frequency = effect.param1.frequency;	
-	int_rep->duration = effect.param1.duration;	
-	add2end(start, tail, int_rep);
-}
-void expand_vibrato(Note_Node **start, Note_Node **tail, Effect_Package effect) {
-	printf(ANSI_BOLD "Note: " ANSI_RESET "due to limitations in interacting with the pc speaker, vibrato is not supported at the moment. As such, invoking this effect will do nothing.\n");
-
-	Note_Node *int_rep = malloc(sizeof(Note_Node));
-	int_rep->frequency = effect.param1.frequency;	
-	int_rep->duration = effect.param1.duration;	
-	add2end(start, tail, int_rep);
-}
-
-/* this is a test */

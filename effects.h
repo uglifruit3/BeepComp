@@ -24,9 +24,7 @@ typedef struct fx_node Effect_Package;
  *
  *    NAME    |   param1  |  param2   |  param3   |    param4     |
  *=================================================================
- * arpeggio   | base note | interval1 | interval2 | arpeggio rate
- * portamento | base note | delay     | rate      | next note
- * vibrato    | base note | range     | rate      | N/A          */
+ * arpeggio   | base note | interval1 | interval2 | arpeggio rate */
 
 #include "parse.h"
 
@@ -34,7 +32,5 @@ unsigned short int hexchar_to_dec(char hexchar);
 
 static void (*fx_macro)(Note_Node **start, Note_Node **tail, Effect_Package effect);
 void expand_arpeggio(Note_Node **start, Note_Node **tail, Effect_Package effect);
-void expand_portamento(Note_Node **start, Note_Node **tail, Effect_Package effect);
-void expand_vibrato(Note_Node **start, Note_Node **tail, Effect_Package effect);
 
 #endif
