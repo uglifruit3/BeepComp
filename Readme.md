@@ -52,9 +52,9 @@ The square-braced items are optional for producing valid notes. Notes are requir
 
 character | meaning
 ----------|--------
-      '#' | sharp
-      'b' | flat
-      'n' | natural
+ '#'      | sharp
+ 'b'      | flat
+ 'n'      | natural
 
 * Octave - specifies the octave at which a note will be played. The numbers 1-9 are valid syntax. Each octave starts with the note C and ends with B. So a third-octave B and fourth-octave C are one half-step apart from each other.
 * Duration - specifies the number of beats for which a note will last. These follow the conventions of regular musical notation, with the characters below corresponding to certain musical counterparts:
