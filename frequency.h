@@ -28,9 +28,6 @@ struct Alt_Key {
 
 /* Calculates frequency
  * IN: The number of half steps the note is from A4
- * IN: The tuning frequency for A4
- *     This should almost ALWAYS be A4 (440), but is left 
- *     flexible for extending to nonconventional tunings
  * OUT: The note's frequency */
 double calc_freq(int hsteps_from_A4);
 
