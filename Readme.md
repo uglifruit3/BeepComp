@@ -2,13 +2,13 @@
 ### A Beep Compiler for making PC speaker music on Linux
 -----------------
 ## Table of Contents
-1. About
-2. Installation
-3. Usage
-   1. Invocation
-   2. Notation and Syntax
-4. Example
-5. Limitations and To-Do
+1. [About](https://github.com/uglifruit3/BeepComp#about)
+2. [Installation](https://github.com/uglifruit3/BeepComp#installation)
+3. [Usage](https://github.com/uglifruit3/BeepComp#usage)
+   1. [Invocation](https://github.com/uglifruit3/BeepComp#invocation)
+   2. [Notation and Syntax](https://github.com/uglifruit3/BeepComp#notation-and-syntax)
+4. [Example](https://github.com/uglifruit3/BeepComp#example)
+5. [Limitations and To-Do](https://github.com/uglifruit3/BeepComp#limitations-and-to-do)
 
 ## About
 -----------------
@@ -41,7 +41,7 @@ It optionally accepts a plain text input file to read from and an output file to
 * When given an output file, the program will automatically make the file executable by the user. Note that it will overwrite an existing output file, so one should use in/out redirection in the shell if they intend to append BeepComp's output.
 
 ## Notation and Syntax
-#### Writing Notes
+### Writing Notes
 BeepComp interprets a note as a continuous string with the structure 
 ```
 <note name>[accidental]<octave>[duration][effects macro]
@@ -52,19 +52,19 @@ The square-braced items are optional for producing valid notes. Notes are requir
 
 character | meaning
 ----------|--------
- '#'      | sharp
- 'b'      | flat
- 'n'      | natural
+  #       | sharp
+  b       | flat
+  n       | natural
 
 * Octave - specifies the octave at which a note will be played. The numbers 1-9 are valid syntax. Each octave starts with the note C and ends with B. So a third-octave B and fourth-octave C are one half-step apart from each other.
 * Duration - specifies the number of beats for which a note will last. These follow the conventions of regular musical notation, with the characters below corresponding to certain musical counterparts:
 
 character |  note type
 ----------|-----------
-   'o'    | whole note
-   ','    | half note
-   '^'    | eigth note
-   '.'    | dot
+    o     | whole note
+    ,     | half note
+    ^     | eigth note
+    .     | dot
 
   * If no duration character is given, the note is taken to be a quarter note. The eighth note characters can be repeated for further subdivisions (e.g. '^^' gives a sixteenth note, '^^^' gives a thirty-second note, and so on). The dot can be used in a similar manner. **Note:** dots must be the final duration character(s) if multiple are given. 
 * Effects macros will be discussed in their respective section.
@@ -75,7 +75,7 @@ A few small examples may be helpful.
 * `Eb5,.` produces a dotted half note, with the pitch of a fifth-octave E flat
 * Notes are delimited by spaces, so to play the first, third, and fifth of a C-major chord one writes `C4 E4 G4`.
 
-#### Timing Elements
+### Timing Elements
 BeepComp also accepts three non-note elements to aid in designing more complex rhythms.
 * Rests
   * Rests will silence the speaker for a specified duration and are represented with the 'r' character. Once a rest is placed, its duration is specified in the same manner that notes are (`r` gives a quarter rest, `r^^` a sixteenth, etc.).
@@ -89,10 +89,10 @@ BeepComp also accepts three non-note elements to aid in designing more complex r
 
 **Note:** rests, ties, and parentheses must be surrounded by at least one space to avoid being interpreted as elements of a note. So, `^^(A4 A5)` and `A4-A4` are invalid syntax and will produce errors. They should instead be written as `^^( A4 A5 )` and `A4 - A4` respectively.
 
-#### Defaults and Commands
+### Defaults and Commands
 BeepComp uses a default tempo of 90 beats per minute when determing the duration of notes. The default key signature is C Major, meaning that there will be no changes to the pitches of any notes. These can both be altered at any point, and as many times as necessary, using commands.
 
-A command is invoked using the `set` keyword, followed by the name of the command and the arguments it accepts. **Each command must reside on its own line.** Doing otherwise will result in invalid syntax. BeepComp recognizes the following commands:
+A command is invoked using the `set` keyword, followed by the name of the command and the arguments it accepts. **Each command must reside on its own line.** BeepComp recognizes the following commands:
 
  command |        argument 
 ---------|-----------------------
@@ -111,7 +111,7 @@ In a key other than C M/A m, BeepComp will automatically alter the pitches of no
 
 The `arprate` command will be addressed in the next section. 
 
-#### Effects Macros
+### Effects Macros
 BeepComp supports an arpeggiation macro to simulate polyphony on `beep` by producing rapid, three-note arpeggios. The macro is invoked using the square braces ('[' and ']') at the end of a note. The note preceding the braces will serve as the first note in the arpeggio. The braces must contain two single-character parameters; the first being the interval in half steps between the original arpeggio note and the next; the second being the interval in half steps between the original note and the final note in the arpeggio. Each parameter is expressed in hexadecimal, meaning numbers between 0 and 15 are accepted in the forms of '0-9' and 'A-F' (A through F must be capitalized). 
 
 * For example, the string `C4[47]` will produce a rapid arpeggio between C4, E4 (four half-steps above C4), and G4 (seven half-steps above C4), lasting the length of a quarter note. One could produce the same arpeggio for half that duration by writing `C4^[47]`.
@@ -120,7 +120,7 @@ BeepComp expands an arpeggio to play at a rate of 60 tones per second by default
 
 The only effects macro currently supported is arpeggiation. See Limitations for an explanation of why.
 
-#### Comments
+### Comments
 BeepComp notation includes a means to make comments for helping with song structure/organization. The percent ('%') character is the reserved comment character, and BeepComp will ignore all input on a line after it is detected. BeepComp also ignores blank lines.
 
 ## Example
