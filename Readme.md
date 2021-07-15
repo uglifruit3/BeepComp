@@ -121,7 +121,7 @@ The only effects macro currently supported is arpeggiation. See Limitations for 
 BeepComp notation includes a means to make comments for helping with song structure/organization. The percent ('%') character is the reserved comment character, and BeepComp will ignore all input on a line after it is detected. BeepComp also ignores blank lines.
 
 ## Example
-I put together a little example of what BeepComp can do, using the first verse of Jonathan Coulton's "Still Alive" from the computer game *Portal* in hopes that it will be illustrative of proper syntax/command usage. You can also download and listen to the shell script which BeepComp creates from it, provided you have `beep` installed on your machine.
+I put together a little example of what BeepComp can do, using the first verse of Jonathan Coulton's "Still Alive" from the computer game *Portal* in hopes that it will be illustrative of proper syntax/command usage. You can also download and listen to the shell script which BeepComp creates from it, provided you have `beep` installed on your machine. Both files are found in the still\_alive directory.
 ```still_alive/still_alive.txt
 
 ```
