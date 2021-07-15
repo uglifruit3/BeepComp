@@ -44,8 +44,6 @@ void free_list(Note_Node **list, Note_Node **tail) {
 }
 
 unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **out, char **out_name) {
-	//int in_flag = 0;
-	//int out_flag = 0;
 	int error_flag = 0;
 	int help_flag = 0;
 	int quiet_flag = 0;
@@ -60,12 +58,10 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
 					if( i > no_args-1 ) { continue; }
 					*out = fopen(cmdline_args[i], "w");
 					*out_name = cmdline_args[i];
-					//out_flag = 1;
 					break;
 				case 'f':
 					i++;
 					*in = fopen(cmdline_args[i], "r");
-					//in_flag = 1;
 					if( *in == NULL ) error_flag = 1;
 					break;
 				case 'h':
