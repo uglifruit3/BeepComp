@@ -52,19 +52,19 @@ The square-braced items are optional for producing valid notes. Notes are requir
 
 character | meaning
 ----------|--------
-  #       | sharp
-  b       | flat
-  n       | natural
+ #        | sharp
+ b        | flat
+ n        | natural
 
 * Octave - specifies the octave at which a note will be played. The numbers 1-9 are valid syntax. Each octave starts with the note C and ends with B. So a third-octave B and fourth-octave C are one half-step apart from each other.
 * Duration - specifies the number of beats for which a note will last. These follow the conventions of regular musical notation, with the characters below corresponding to certain musical counterparts:
 
 character |  note type
 ----------|-----------
-    o     | whole note
-    ,     | half note
-    ^     | eigth note
-    .     | dot
+ o        | whole note
+ ,        | half note
+ ^        | eigth note
+ .        | dot
 
   * If no duration character is given, the note is taken to be a quarter note. The eighth note characters can be repeated for further subdivisions (e.g. '^^' gives a sixteenth note, '^^^' gives a thirty-second note, and so on). The dot can be used in a similar manner. **Note:** dots must be the final duration character(s) if multiple are given. 
 * Effects macros will be discussed in their respective section.
