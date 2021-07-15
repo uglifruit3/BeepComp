@@ -52,7 +52,7 @@ The square-braced items are optional for producing valid notes. Notes are requir
 
 character | meaning
 ----------|--------
- #        | sharp
+ \#        | sharp
  b        | flat
  n        | natural
 
