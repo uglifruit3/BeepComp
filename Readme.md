@@ -42,28 +42,31 @@ It optionally accepts a plain text input file to read from and an output file to
 
 ## Notation and Syntax
 #### Writing Notes
-BeepComp interprets a note as a continuous string with the structure `<note name>[accidental]<octave>[duration][effects macro]` and **expects notes to be separated by at least one space.**
-The square-braced items are optional for writing a valid note.
+BeepComp interprets a note as a continuous string with the structure 
+```
+<note name>[accidental]<octave>[duration][effects macro]
+``` 
+The square-braced items are optional for producing valid notes. Notes are required to be separated by spaces.
 * Note name - the letters 'A' through 'G' are valid note names.
 * Accidental - for specifying a sharp, flat, or natural (for negating accidentals given by key signatures).
 
-   character | meaning
-  -----------|---------
-      '#'    |  sharp
-      'b'    |  flat
-      'n'    | natural
+character | meaning
+----------|--------
+      '#' | sharp
+      'b' | flat
+      'n' | natural
 
 * Octave - specifies the octave at which a note will be played. The numbers 1-9 are valid syntax. Each octave starts with the note C and ends with B. So a third-octave B and fourth-octave C are one half-step apart from each other.
 * Duration - specifies the number of beats for which a note will last. These follow the conventions of regular musical notation, with the characters below corresponding to certain musical counterparts:
 
-   character |  note type
-  -----------|------------
-      'o'    | whole note
-      ','    | half note
-      '^'    | eigth note
-      '.'    | dot
+character |  note type
+----------|-----------
+   'o'    | whole note
+   ','    | half note
+   '^'    | eigth note
+   '.'    | dot
 
-  * If no duration character is given, the note is taken to be a quarter note. The eighth note characters can be repeated for further subdivisions (e.g. '^^' gives a sixteenth note, '^^^' gives a thirty-second note, and so on). The dot can be used in a similar manner. **Dots must** be the final duration character(s) if multiple are given. 
+  * If no duration character is given, the note is taken to be a quarter note. The eighth note characters can be repeated for further subdivisions (e.g. '^^' gives a sixteenth note, '^^^' gives a thirty-second note, and so on). The dot can be used in a similar manner. **Note:** dots must be the final duration character(s) if multiple are given. 
 * Effects macros will be discussed in their respective section.
 
 A few small examples may be helpful.
@@ -84,7 +87,7 @@ BeepComp also accepts three non-note elements to aid in designing more complex r
   * For example, `^^( A3 C4 E4^ G4 )` is equivalent to `A3^^ C4^^ E4^^^ E4^^`.
   * Parentheses may be nested. So, `^( A4 ^( E5 ) A4 )` expands to `A4^ E5^^ A4^`.
 
-**One should note** that rests, ties, and parentheses must be surrounded by at least one space to avoid being interpreted as elements of a note. So, `^^(A4 A5)` and `A4-A4` are invalid syntax and will produce errors. They should instead be written as `^^( A4 A5 )` and `A4 - A4` respectively.
+**Note:** rests, ties, and parentheses must be surrounded by at least one space to avoid being interpreted as elements of a note. So, `^^(A4 A5)` and `A4-A4` are invalid syntax and will produce errors. They should instead be written as `^^( A4 A5 )` and `A4 - A4` respectively.
 
 #### Defaults and Commands
 BeepComp uses a default tempo of 90 beats per minute when determing the duration of notes. The default key signature is C Major, meaning that there will be no changes to the pitches of any notes. These can both be altered at any point, and as many times as necessary, using commands.
@@ -122,8 +125,53 @@ BeepComp notation includes a means to make comments for helping with song struct
 
 ## Example
 I put together a little example of what BeepComp can do, using the first verse of Jonathan Coulton's "Still Alive" from the computer game *Portal* in hopes that it will be illustrative of proper syntax/command usage. You can also download and listen to the shell script which BeepComp creates from it, provided you have `beep` installed on your machine. Both files are found in the still\_alive directory.
-```still_alive/still_alive.txt
+```
+% A short cover of 'Still Alive' from Portal.
+set tempo 120
+set key D M
 
+^( G5^ r^ F5^ r^ E5 E5 ) F5, % this was a triumph
+r, r r^
+^( A4 G5^ r^ F5^ r^ E5 E5 - E5 ) F5. % I'm making a note here
+D5 E5^ A4^ - A4, r. % HUGE SUCCESS
+A4^ E5 F5^ G5^ - G5 ^( E5 C5 - C5 ) % it's hard to overstate
+D5. E5 A4^ A4 F5. % my satisfaction
+
+^( B2 D3 F3 D3 A2 D3 F3 D3 ) % bass line
+
+^( G5 F5 E5 E5 ) F5 % Aperture Science
+^( F3 D3 B2 D3 F3 D3 A2 D3 F3 ) % (bass)
+^( A4 G5 F5 E5 E5 - ) E5 % we do what we must
+F5^ D5^ - D5 E5^ A4^ - A4^ % because we can
+^( D3 F3 D3 B2 D3 F3 D3 ) % (bass)
+
+E5 F5^ G5^ - G5 ^( E5 C5 - ) C5 % for the good of all
+^( D5 E5 - E5 A4 D5 E5 ) % of us, except the
+set key F M % (key change)
+^( F5 E5 D5 C5 ) r % ones who are dead
+
+A4^ B4^ % but there's 
+set arprate 60
+F4[70] A4[38] % no sense
+set arprate 50
+^( G4[48] G4[46] G4[26] G4[24] ) % crying over 
+F4^[59] F4^[57] % every
+set arprate 45
+F4[57] F4[47] % mistake
+A4^ B4^ % you just
+set arprate 50
+F4[47] A4[38] % keep on 
+^( C5[47] C5[45] G4[48] G4[46] ) % trying til you
+^( F4[59] F4[5B] ) F4[5C] A4[38] % run out of cake
+
+G5^ A5^ % and the 
+D5^[58] D5^[38] D5[37] C5[47] F5^ G5^ % science gets done and you
+set arprate 45
+C5^[59] C5^[49] C5[47] A4[58] D5^ C5^ % make a neat gun for the
+set arprate 50
+^( F4[59] F4[5C] F4[5C] ) A4[47] % people who are
+set arprate 40
+A4[47] A4^[49] Gb5, % still alive
 ```
 
 ## Limitations and To-Do
