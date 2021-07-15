@@ -8,19 +8,20 @@
 #include "commands.h"
 #include "effects.h"
 
+
 char *Key_Str;
 int **freq_table;
 Key_Map *key;
 
 int main(int argc, char *argv[]) {
-	unsigned int exit = 0;
+	unsigned int exit = NORMAL_EXIT;
 	/* parsing command line invocation */
 	FILE *infile = NULL;
 	FILE *outfile = NULL;
 	char *outfile_name;
 	exit = parse_cmdline(argv, argc, &infile, &outfile, &outfile_name);
-	if( exit == 1 ) return exit;
-	else if( exit == 2 ) return 0;
+	if( exit == ERROR_EXIT ) return ERROR_EXIT;
+	else if( exit == HELP_EXIT ) return NORMAL_EXIT;
 	
 	/* initializing default values */
 	Key_Str = malloc(5*sizeof(char)); strncpy(Key_Str, "C M", 5);
@@ -29,12 +30,12 @@ int main(int argc, char *argv[]) {
 
 	/* parsing all input and writing to output */
 	unsigned int status = parse_infile(infile, outfile, &Key_Str, freq_table, &key);
-	if( status == 1 ) exit = 1;
+	if( status == ERROR_EXIT ) exit = ERROR_EXIT;
 
 	/* changing file permissions to executable on output file */
 	if( outfile != stdout && chmod(outfile_name, S_IRWXU) ) { 
 		fprintf(stderr, "Error changing outfile permissions to executable.\n");
-	} else if( outfile != stdout && exit == 0 ) printf("All notes succesfully written to file. Exiting.\n");
+	} else if( outfile != stdout && exit == NORMAL_EXIT ) printf("All notes succesfully written to file. Exiting.\n");
 
 	/* freeing all allocated memory */
 	free(Key_Str);

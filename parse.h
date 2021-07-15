@@ -48,6 +48,8 @@ struct fx_node {
 enum Error_State  {NORMAL, TIME_ERROR, NOTE_ERROR, NAME_ERROR, ARG_ERROR, NO_ARGS_PASSED_ERROR}; 
 /* denotes whether a command, note, or error has been found */
 enum Parse_Status {COMMAND, NOTE, FAILED, NONE};
+/* for handling exit status in main */
+enum Exit_Status { NORMAL_EXIT, ERROR_EXIT, HELP_EXIT };
 
 /* linked list helper functions */
 void add2start(Note_Node **start, Note_Node *new);

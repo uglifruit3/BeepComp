@@ -687,7 +687,7 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **fre
 	/* this loop cycles through each line of input, builds a
 	 * buffer from it, then converts it into an intermediate
 	 * representation */
-	int exit = 0;
+	int exit = NORMAL_EXIT;
 	while( 1 ) {
 		fflush(stdin);
 		line_number++;
@@ -701,7 +701,7 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **fre
 		 * is stdin; otherwise exit */
 		if( elements == FAILED ) { 
 			if( infile == stdin ) continue;
-			else { exit = 1; break; }
+			else { exit = ERROR_EXIT; break; }
 		} else if( elements == COMMAND ) { 
 			if( !strcmp(buffer[1], "tempo") ) command_tempo(atoi(buffer[2]), &Tempo);
 			else if( !strcmp(buffer[1], "key") ) command_key(buffer[2], buffer[3], *Key_Str, key);
@@ -720,7 +720,7 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **fre
 		for( int i = 0; i < no_buff_elements; i++ ) { free(buffer[i]); }
 		free(buffer);
 		fprintf(stderr, "Input not succesfully written to file.\n");
-		exit = 1;
+		exit = ERROR_EXIT;
 	}
 	else if( Notes_Array != NULL ) write_to_file(Notes_Array, outfile, tail);
 
