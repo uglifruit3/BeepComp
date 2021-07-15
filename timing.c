@@ -1,6 +1,5 @@
 #include <string.h>
 
-#include "semantics.h"
 #include "timing.h"
 
 double get_subdivision(char *time_mods, int index, double duration) {
@@ -14,13 +13,6 @@ double get_duration_from_string(char *time_mods, double tempo) {
 	const double beat_duration = 60.0 / tempo;	
 	double note_duration = beat_duration;
 
-	/* List of modifiers:
-	 * o  - whole note
-	 * ,  - half note
-	 * ^  - eight note
-	 * ^^ - sixteenth... adding more sequentially further shortens
-	 * .  - dot; similar to eigth note modifier, but progressively adds to note */
-	
 	int index = 0;
 	while( time_mods[index] != '\0' ) {
 		switch( time_mods[index] ) {

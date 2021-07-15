@@ -4,7 +4,6 @@
 
 #include "frequency.h"
 #include "parse.h"
-#include "semantics.h"
 #include "timing.h"
 #include "commands.h"
 #include "effects.h"
@@ -35,7 +34,7 @@ int main(int argc, char *argv[]) {
 	/* changing file permissions to executable on output file */
 	if( outfile != stdout && chmod(outfile_name, S_IRWXU) ) { 
 		fprintf(stderr, "Error changing outfile permissions to executable.\n");
-	} else if( outfile != stdout ) printf("All notes succesfully written to file. Exiting.\n");
+	} else if( outfile != stdout && exit == 0 ) printf("All notes succesfully written to file. Exiting.\n");
 
 	/* freeing all allocated memory */
 	free(Key_Str);

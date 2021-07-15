@@ -3,7 +3,6 @@
 
 #include "effects.h"
 #include "parse.h"
-#include "semantics.h"
 #include "commands.h"
 #include "frequency.h"
 #include "timing.h"
@@ -100,7 +99,10 @@ unsigned int frmtcmp(char *str, char *frmt) {
 	int no_frmt_words = 0;
 	if( strcmp(frmt, "")) {
 		for( int i = 0; i < strlen(frmt); i++ ) {
-			if( frmt[i] == ' ' ) no_frmt_words++;
+			if( frmt[i] == ' ' ) {
+				while( frmt[i] == ' ' && i < strlen(frmt) ) { i++; }
+				no_frmt_words++;
+			}
 		}
 		no_frmt_words++;
 	}
@@ -108,13 +110,15 @@ unsigned int frmtcmp(char *str, char *frmt) {
 	int no_str_words = 0;
 	if( strcmp(str, "") ) {
 		for( int i = 0; i < strlen(str); i++ ) {
-			if( str[i] == ' ' ) no_str_words++;
+			if( str[i] == ' ' ) {
+				while( frmt[i] == ' ' && i < strlen(frmt) ) { i++; }
+				no_str_words++;
+			}
 		}
 		no_str_words++;
 	}
 
-	if( no_str_words < no_frmt_words ) return NO_ARGS_PASSED_ERROR;
-	else if( no_str_words != no_frmt_words ) return ARG_ERROR;
+	if( no_str_words != no_frmt_words ) return NO_ARGS_PASSED_ERROR;
 
 	/* building space-delimited arrays of response and template */
 	const char delim[] = " ";
@@ -187,7 +191,7 @@ unsigned int validate_command(char *command, char *argument) {
 		 * it does so here because it adds minimal complication 
 		 * elsewhere in the program */
 		if( !strcmp(command, "key") ) {
-			if( argument[1] != ' ' && argument[1] != '#' && argument[1] != 'b' && argument[1] != 'n' ) 
+			if( argument[1] != '\0' && argument[1] != ' ' && argument[1] != '#' && argument[1] != 'b' && argument[1] != 'n' ) 
 				return ARG_ERROR;
 		}	
 
@@ -219,7 +223,7 @@ void print_error_line(char *line, int line_no, char *error_string) {
 	printf(ANSI_CYAN);
 	putchar('^');
 	for( int i = 0; i < strlen(error_string)-1; i++ ) { putchar('~'); }
-	printf(" HERE\n" ANSI_RESET);
+	printf(" HERE" ANSI_RESET "\n");
 }
 
 unsigned int parse_for_command(char *line, int line_number) {
@@ -250,11 +254,11 @@ unsigned int parse_for_command(char *line, int line_number) {
 				return NONE;
 				break;
 			case ARG_ERROR:
-				fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "invalid argument(s) given for command \"%s\".\n", line_number, cmd_name);
+				fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "invalid argument(s) supplied for command \"%s\".\n", line_number, cmd_name);
 				print_error_line(line, line_number, argument);
 				break;
 			case NO_ARGS_PASSED_ERROR:
-				fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "insufficient argument(s) given for command \"%s\".\n", line_number, cmd_name);
+				fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "incorrect number of argument(s) supplied for command \"%s\".\n", line_number, cmd_name);
 				print_error_line(line, line_number, cmd_name);
 				break;
 		}
@@ -397,6 +401,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 		else if( line[i] == ' ' ) { 
 			no_line_elements++;
 			while( line[i] == ' ' ) { i++; }
+			i--;
 		}
 	}
 	no_line_elements++;
@@ -654,6 +659,7 @@ void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node
 			i++;
 			Note_Node *temp_rep = convert_from_string(buffer[i], keymap, freq_table, tempo);
 			(*tail)->duration += temp_rep->duration;
+			free(temp_rep);
 
 		/* regular case */
 		} else {

@@ -1,10 +1,8 @@
 #ifndef timing_include
 #define timing_include
 
-/********************************************************************
- * Header file for all things timing related in making note 
- * translations
- ********************************************************************/
+/* Header file for defining all macros and functions that relate to the timing
+ * of notes */
 
 /* Constants for use in calculating the length of a note */
 #define WHOLE 4.0
@@ -15,7 +13,7 @@ static double Tempo = 90;
 
 /* Recursively finds the duration of a note that includes any subdivisions beneath
  * the quarter note.
- * IN: The string of time modifiers, #the index therein, and the note's current length
+ * IN: a string of time modifiers, the index therein, and the note's current length
  * OUT: The note's new duration in seconds */
 double get_subdivision(char *time_mods, int index, double duration);
 

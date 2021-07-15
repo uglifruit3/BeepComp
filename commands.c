@@ -3,7 +3,7 @@
 #include "commands.h"
 #include "timing.h"
 #include "frequency.h"
-#include "semantics.h"
+#include "parse.h"
 
 void command_tempo(double new_tempo, double *tempo) {
 	*tempo = new_tempo;

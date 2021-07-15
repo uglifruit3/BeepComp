@@ -14,11 +14,15 @@ unsigned short int hexchar_to_dec(char hexchar) {
 		return hexchar - 55;
 	else return 16;
 }
+long int max(long int a, long int b) {
+	if( a > b ) return a;
+	return b;
+}
 
 void expand_arpeggio(Note_Node **start, Note_Node **tail, Effect_Package effect) {
-	double dbl_total_notes = ((double)effect.param4/1000.0) * effect.param1.duration;
-	int total_notes = (int)dbl_total_notes;
-	double note_len = effect.param1.duration/dbl_total_notes;
+	long double dbl_total_notes = ((long double)effect.param4/1000.0) * effect.param1.duration;
+	long int total_notes = (long int)dbl_total_notes;
+	long double note_len = effect.param1.duration/dbl_total_notes;
 
 	/* accounts for uneven length of note */
 	double final_note_len = note_len;
@@ -33,7 +37,8 @@ void expand_arpeggio(Note_Node **start, Note_Node **tail, Effect_Package effect)
 		Note_Node *int_rep = malloc(sizeof(Note_Node));
 		/* cycles through the 3 arpeggio tones */
 		int_rep->frequency = frequencies[i % 3];
-		int_rep->duration = note_len - (note_len-final_note_len)*(i/(total_notes-1));
+		/* max function deals with edge case that total_notes-1 is 0 */
+		int_rep->duration = note_len - (note_len-final_note_len)*(i/(max(total_notes-1, 1)));
 		add2end(start, tail, int_rep);	
 	}
 }

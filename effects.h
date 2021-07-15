@@ -1,6 +1,9 @@
 #ifndef effects_inc
 #define effects_inc
 
+/* header for defining related types, enumerators, and 
+ * functions for effects */
+
 #include <stdlib.h>
 #include <stdio.h>
 

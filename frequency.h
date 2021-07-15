@@ -1,9 +1,8 @@
 #ifndef freq_table_include
 #define freq_table_include
-/*******************************************************************
- * Header file for all things frequency
- * related
- *******************************************************************/
+
+/* Header file for defining types, macros, and functions related to
+ * frequency and pitch */
 
 #include <string.h>
 #include <math.h>

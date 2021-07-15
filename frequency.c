@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "frequency.h"
-#include "semantics.h"
+#include "parse.h"
 
 double calc_freq(int hsteps_from_A4) {
 	/* uses equation of the form:
