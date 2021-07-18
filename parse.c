@@ -547,7 +547,8 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 				if( line_elements[i][0] == '-' && line_elements[i][1] == '\0' ) continue;
 				char cpy[32]; strncpy(cpy, line_elements[i], 32);
 				Effect_Package temp = parse_effects_macros(cpy);
-				char macro_temp[5] = "\0";
+				char macro_temp[6];
+				memset(macro_temp, '\0', 6);
 				/* if a macro is present, this block splices the appended
 				 * time mod between the note and macro so as to feed legal
 				 * input to the buffer validation and conversion functions 
