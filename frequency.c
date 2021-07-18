@@ -12,14 +12,17 @@ double calc_freq(int hsteps_from_A4) {
 
 int round_dbl(double n) {
 	int rounded;
-	if( n - (int)n > 0.5 ) rounded = (int)(n + 0.5);
+	if( fabs(n) - abs(n) > 0.5 ) { 
+		if( n > 0 ) rounded = (int)(n + 0.5);
+		else        rounded = (int)(n - 0.5);
+	}
 	else rounded = (int)n;
 
 	return rounded;
 }
 
 int hsteps_from_A4(int frequency) {
-	double steps = log10(frequency/A4)/log10(CONST_A);
+	double steps = log10((double)frequency/A4)/log10((double)CONST_A);
 	return round_dbl(steps);
 }
 
