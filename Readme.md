@@ -58,6 +58,7 @@ character | meaning
 
 * Octave - specifies the octave at which a note will be played. The numbers 1-9 are valid syntax. Each octave starts with the note C and ends with B. So a third-octave B and fourth-octave C are one half-step apart from each other.
 * Duration - specifies the number of beats for which a note will last. These follow the conventions of regular musical notation, with the characters below corresponding to certain musical counterparts:
+  * If no duration character is given, the note is taken to be a quarter note. The eighth note characters can be repeated for further subdivisions (e.g. '^^' gives a sixteenth note, '^^^' gives a thirty-second note, and so on). The dot can be used in a similar manner. **Note:** dots must be the final duration character(s) if multiple are given. 
 
 character |  note type
 ----------|-----------
@@ -66,10 +67,9 @@ character |  note type
  ^        | eigth note
  .        | dot
 
-  * If no duration character is given, the note is taken to be a quarter note. The eighth note characters can be repeated for further subdivisions (e.g. '^^' gives a sixteenth note, '^^^' gives a thirty-second note, and so on). The dot can be used in a similar manner. **Note:** dots must be the final duration character(s) if multiple are given. 
 * Staccato - slightly shortens the end of a note to give a staccato-like sound. Staccato is invoked using the star ('\*') character.
   * Staccato by default removes 50 milliseconds from the end of a note, provided the note is at least 50 milliseconds long. 
-	* For example, `C4* B4` will shorten C4 by 50 ms, be silent for 50 ms, and then play B4.
+  * For example, `C4* B4` will shorten C4 by 50 ms, be silent for 50 ms, and then play B4.
 * Effects macros will be discussed in their respective section.
 
 A few small examples may be helpful.
