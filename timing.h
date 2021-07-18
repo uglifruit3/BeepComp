@@ -10,7 +10,7 @@
 #define EIGTH 0.5
 
 static double Tempo = 90;
-static double Staccato_Time = 10;
+static double Staccato_Time = 50;
 
 /* Recursively finds the duration of a note that includes any subdivisions beneath
  * the quarter note.
