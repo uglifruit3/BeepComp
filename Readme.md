@@ -44,7 +44,7 @@ It optionally accepts a plain text input file to read from and an output file to
 ### Writing Notes
 BeepComp interprets a note as a continuous string with the structure 
 ```
-<note name>[accidental]<octave>[duration][effects macro]
+<note name>[accidental]<octave>[duration][staccato][effects macro]
 ``` 
 The square-braced items are optional for producing valid notes. Notes are required to be separated by spaces.
 * Note name - the letters 'A' through 'G' are valid note names.
@@ -52,7 +52,7 @@ The square-braced items are optional for producing valid notes. Notes are requir
 
 character | meaning
 ----------|--------
- \#        | sharp
+ \#       | sharp
  b        | flat
  n        | natural
 
@@ -67,6 +67,9 @@ character |  note type
  .        | dot
 
   * If no duration character is given, the note is taken to be a quarter note. The eighth note characters can be repeated for further subdivisions (e.g. '^^' gives a sixteenth note, '^^^' gives a thirty-second note, and so on). The dot can be used in a similar manner. **Note:** dots must be the final duration character(s) if multiple are given. 
+* Staccato - slightly shortens the end of a note to give a staccato-like sound. Staccato is invoked using the star ('\*') character.
+  * Staccato by default removes 50 milliseconds from the end of a note, provided the note is at least 50 milliseconds long. 
+	* For example, `C4* B4` will shorten C4 by 50 ms, be silent for 50 ms, and then play B4.
 * Effects macros will be discussed in their respective section.
 
 A few small examples may be helpful.
@@ -94,11 +97,12 @@ BeepComp uses a default tempo of 90 beats per minute when determing the duration
 
 A command is invoked using the `set` keyword, followed by the name of the command and the arguments it accepts. **Each command must reside on its own line.** BeepComp recognizes the following commands:
 
- command |        argument 
----------|-----------------------
-  tempo  | new tempo in bpm
-   key   | new key 
- arprate | new arpeggiation rate
+ command  |        argument 
+----------|-----------------------
+  tempo   | new tempo in bpm
+   key    | new key 
+ arprate  | new arpeggiation rate
+ staccato | new staccato delay
 
 * For example, to change the tempo to 60 bpm, one would write `set tempo 60`.
 
@@ -108,6 +112,8 @@ In a key other than C M/A m, BeepComp will automatically alter the pitches of no
 * For example, the key of A minor is expressed as "A m"; C sharp major is expressed as "C# M". 
 * To change the key signature to C sharp major, one writes `set key C# M`.
 * If one intends for `A5` to in fact remain `A5` in the key of C# M, one would write `A5n`.
+
+The argument for the staccato command specifies how long in milliseconds BeepComp will choose to wait between a note that is staccato and the next.
 
 The `arprate` command will be addressed in the next section. 
 
@@ -129,10 +135,11 @@ I put together a little example of what BeepComp can do, using the first verse o
 % A short cover of 'Still Alive' from Portal.
 set tempo 120
 set key D M
+set staccato 100
 
-^( G5^ r^ F5^ r^ E5 E5 ) F5, % this was a triumph
+^( G5* F5* E5 E5 ) F5, % this was a triumph
 r, r r^
-^( A4 G5^ r^ F5^ r^ E5 E5 - E5 ) F5. % I'm making a note here
+^( A4 G5* F5* E5 E5 - E5 ) F5. % I'm making a note here
 D5 E5^ A4^ - A4, r. % HUGE SUCCESS
 A4^ E5 F5^ G5^ - G5 ^( E5 C5 - C5 ) % it's hard to overstate
 D5. E5 A4^ A4 F5. % my satisfaction
@@ -154,14 +161,14 @@ A4^ B4^ % but there's
 set arprate 60
 F4[70] A4[38] % no sense
 set arprate 50
-^( G4[48] G4[46] G4[26] G4[24] ) % crying over 
+^( G4[59] G4[57] G4[37] G4[35] ) % crying over 
 F4^[59] F4^[57] % every
 set arprate 45
 F4[57] F4[47] % mistake
 A4^ B4^ % you just
 set arprate 50
 F4[47] A4[38] % keep on 
-^( C5[47] C5[45] G4[48] G4[46] ) % trying til you
+^( C5[47] C5[45] G4[59] G4[57] ) % trying til you
 ^( F4[59] F4[5B] ) F4[5C] A4[38] % run out of cake
 
 G5^ A5^ % and the 
@@ -171,7 +178,7 @@ C5^[59] C5^[49] C5[47] A4[58] D5^ C5^ % make a neat gun for the
 set arprate 50
 ^( F4[59] F4[5C] F4[5C] ) A4[47] % people who are
 set arprate 40
-A4[47] A4^[49] Gb5, % still alive
+A4[47] A4^*[49] Gb5, % still alive
 ```
 
 ## Limitations and To-Do
