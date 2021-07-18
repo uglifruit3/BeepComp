@@ -28,6 +28,7 @@ typedef struct fx_node Effect_Package;
 
 #include "parse.h"
 
+
 unsigned short int hexchar_to_dec(char hexchar);
 
 static void (*fx_macro)(Note_Node **start, Note_Node **tail, Effect_Package effect);

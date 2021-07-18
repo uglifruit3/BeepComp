@@ -1,10 +1,11 @@
 % A short cover of 'Still Alive' from Portal.
 set tempo 120
 set key D M
+set staccato 100
 
-^( G5^ r^ F5^ r^ E5 E5 ) F5, % this was a triumph
+^( G5* F5* E5 E5 ) F5, % this was a triumph
 r, r r^
-^( A4 G5^ r^ F5^ r^ E5 E5 - E5 ) F5. % I'm making a note here
+^( A4 G5* F5* E5 E5 - E5 ) F5. % I'm making a note here
 D5 E5^ A4^ - A4, r. % HUGE SUCCESS
 A4^ E5 F5^ G5^ - G5 ^( E5 C5 - C5 ) % it's hard to overstate
 D5. E5 A4^ A4 F5. % my satisfaction
@@ -26,14 +27,14 @@ A4^ B4^ % but there's
 set arprate 60
 F4[70] A4[38] % no sense
 set arprate 50
-^( G4[48] G4[46] G4[26] G4[24] ) % crying over 
+^( G4[59] G4[57] G4[37] G4[35] ) % crying over 
 F4^[59] F4^[57] % every
 set arprate 45
 F4[57] F4[47] % mistake
 A4^ B4^ % you just
 set arprate 50
 F4[47] A4[38] % keep on 
-^( C5[47] C5[45] G4[48] G4[46] ) % trying til you
+^( C5[47] C5[45] G4[59] G4[57] ) % trying til you
 ^( F4[59] F4[5B] ) F4[5C] A4[38] % run out of cake
 
 G5^ A5^ % and the 
@@ -43,4 +44,4 @@ C5^[59] C5^[49] C5[47] A4[58] D5^ C5^ % make a neat gun for the
 set arprate 50
 ^( F4[59] F4[5C] F4[5C] ) A4[47] % people who are
 set arprate 40
-A4[47] A4^[49] Gb5, % still alive
+A4[47] A4^*[49] Gb5, % still alive

@@ -33,3 +33,7 @@ int command_key(char *new_key0, char *new_key1, char *key, Key_Map **keymap) {
 void command_arprate(int new_arprate, int *arprate) {
 	*arprate = new_arprate;
 }
+
+void command_staccato(double new_staccato, double *staccato) {
+	*staccato = new_staccato;
+}

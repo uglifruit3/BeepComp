@@ -43,14 +43,19 @@ void free_list(Note_Node **list, Note_Node **tail) {
 	free(*list);
 }
 
+void free_array(char **array, int no_elements) {
+		for( int i = 0; i < no_elements; i++ ) {
+			free(array[i]);
+		}
+		free(array);
+}
+
 unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **out, char **out_name) {
-	int error_flag = 0;
-	int help_flag = 0;
-	int quiet_flag = 0;
+	int error_flag = FALSE;
+	int help_flag = FALSE;
+	int quiet_flag = FALSE;
 
 	for( int i = 1; i < no_args; i++ ) {
-		/* set of statements reads flags, opens files, and checks for 
-		 * errors as appropriate */
 		if( cmdline_args[i][0] == '-' ) {
 			switch( cmdline_args[i][1] ) {
 				case 'o':
@@ -62,32 +67,32 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
 				case 'f':
 					i++;
 					*in = fopen(cmdline_args[i], "r");
-					if( *in == NULL ) error_flag = 1;
+					if( *in == NULL ) error_flag = TRUE;
 					break;
 				case 'h':
-					help_flag = 1;
+					help_flag = TRUE;
 					break;
 				default:
 					printf(ANSI_BOLD "Error: " ANSI_RESET "invalid options have been supplied.\n");
-					error_flag = 1; 
+					error_flag = TRUE; 
 					break;
 			}
-		} else error_flag = 1;
+		} else error_flag = TRUE;
 	}
-	/* ensuring that an input and output are specified. Printing 
-	 * error messages if not */
+
 	if( error_flag || help_flag ) {
 		if( error_flag && *in == NULL ) {
-			return 1;
+			return ERROR_EXIT;
 		}
 		printf("Usage: beepcomp [-h] [-f " ANSI_UNDR "infile" ANSI_RESET "] [-o " ANSI_UNDR "outfile" ANSI_RESET "]\n" );
-		if( help_flag ) return 2;
-		else return 1;
+
+		if( help_flag ) return HELP_EXIT;
+		else return ERROR_EXIT;
 	}
 
 	if( *in  == NULL ) *in = stdin;
 	if( *out == NULL ) *out = stdout;
-	return 0;
+	return NORMAL_EXIT;
 }
 
 unsigned int frmtcmp(char *str, char *frmt) {
@@ -136,34 +141,32 @@ unsigned int frmtcmp(char *str, char *frmt) {
 	}
 
 	for( int i = 0; i < no_frmt_words; i++ ) {
-		/* validity_flag points to whether the passed string matches the format
-		   1 denotes matching, 0 denotes not matching */
-		int validity_flag = 1;
+		int match_flag = TRUE;
 		if( frmt_words[i][0] == '%' ) {
 			switch( frmt_words[i][1] ) {
 				case 'i':
-					validity_flag = atoi(str_words[i]);
+					match_flag = atoi(str_words[i]);
 					break;
 				case 's':
-					validity_flag = !atoi(str_words[i]);
+					match_flag = !atoi(str_words[i]);
 					break;
 				case 'f':
-					validity_flag = atof(str_words[i]);
+					match_flag = atof(str_words[i]);
 					break;
 				case 'c':
-					validity_flag = (strlen(str_words[i]) == 1 && str_words[i][0] <= 'z' && str_words[i][0] >= 'A') ? 1:0;
+					match_flag = (strlen(str_words[i]) == 1 && str_words[i][0] <= 'z' && str_words[i][0] >= 'A') ? TRUE:FALSE;
 					break;
 				default:
-					validity_flag = 0;
+					match_flag = FALSE;
 					break;
 			}
 		}
 		else {
-			if( !strcmp(frmt_words[i], str_words[i]) ) validity_flag = 1;
-			else validity_flag = 0;
+			if( !strcmp(frmt_words[i], str_words[i]) ) match_flag = TRUE;
+			else match_flag = FALSE;
 		}
 		
-		if( validity_flag == 0 ) { free(frmt_words); free(str_words); return ARG_ERROR; }
+		if( !match_flag ) { free(frmt_words); free(str_words); return ARG_ERROR; }
 	}
 
 	free(frmt_words);
@@ -201,16 +204,16 @@ unsigned int validate_command(char *command, char *argument) {
 void print_error_line(char *line, int line_no, char *error_string) {
 	/* substring matching to identify where in the line the error occurs */
 	int error_index;
-	int found_string = 0;
+	int found_string = FALSE;
 	for( int i = 0; i < strlen(line)-strlen(error_string)+1; i++ ) {
 		if( line[i] == error_string[0] ) {
-			found_string = 1;
+			found_string = TRUE;
 			for( int k = i; k < strlen(error_string)+i; k++ ) { 
-				if( line[k] != error_string[k-i] ) { found_string = 0; break; }
+				if( line[k] != error_string[k-i] ) { found_string = FALSE; break; }
 			}	
 		}
 
-		if( found_string ) { error_index = i; break; }
+		if( found_string == TRUE ) { error_index = i; break; }
 	}
 				
 	fprintf(stderr, "LINE %03i: ", line_no);
@@ -222,7 +225,7 @@ void print_error_line(char *line, int line_no, char *error_string) {
 	printf(" HERE" ANSI_RESET "\n");
 }
 
-unsigned int parse_for_command(char *line, int line_number) {
+unsigned int parse_command_or_macrodef(char *line, int line_number) {
 	char first_str[128];
 	sscanf(line, "%s", first_str);
 
@@ -239,7 +242,6 @@ unsigned int parse_for_command(char *line, int line_number) {
 			else argument[j++] = line[i];	
 		}
 		argument[i+1] = '\0';
-
 
 		switch( validate_command(cmd_name, argument) ) {
 			case NORMAL:
@@ -260,7 +262,16 @@ unsigned int parse_for_command(char *line, int line_number) {
 		}
 		return FAILED;
 	}
-	else 
+	else if( !strcmp(first_str, MACRO_DEF_KEYWORD) ) {
+		char macro_name[64];
+		sscanf(line, "%*s %s", macro_name);
+		if( macro_name[0] == ARP_MACRO_CHAR ) {
+			printf("Arpeggio macro defined!\n");
+		} else if( macro_name[0] == CUS_MACRO_CHAR ) {
+			printf("Text macro defined!\n");
+		}
+		return FAILED;
+	} else 
 		return NONE;
 }
 
@@ -336,11 +347,13 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 						for( int j = time_pos; j < strlen(buffer[i]); j++ ) {
 							if( buffer[i][j] != time_mod ) { 
 								if( buffer[i][j] == '.' ) time_mod == '.'; 
+								else if( buffer[i][j] == '*' && buffer[i][j+1] == '\0' ) continue;
 								else { status = i+1; break; }
 							}
 						}
 					}
-				} else { status = i+1; break; }
+				} else if( buffer[i][time_pos] == '*' && buffer[i][time_pos+1] == '\0' ) continue;
+				  else { status = i+1; break; }
 			} else { status = i+1; break; }
 		} else if( buffer[i][0] == 'r' ) {
 			time_pos = 1;
@@ -358,20 +371,40 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 			}
 		} else if( buffer[i][1] == '\n' ) continue;
 		else if( buffer[i][0] == '-' ) {
+			if( i == no_buffer_elements-1 || i == 0 ) {
+				fprintf(stderr, ANSI_BOLD "Note: " ANSI_RESET "a tie must be preceded and followed by another note.\n");
+				status = i+1; break; 
+			}
+
 			char prev_note[3]; 
 			char next_note[3];
+			int next_note_index = i+1;
+			int last_note_index = i-1;
+			while ( buffer[next_note_index][0] == ')' || buffer[next_note_index][0] == '^' ) {
+				next_note_index++;
+			}
+			while ( buffer[last_note_index][0] == ')' || buffer[last_note_index][0] == '^' ) {
+				last_note_index--;
+			}
 			next_note[2] = prev_note[2] = '\0';
-			if( strlen(buffer[i+1]) <= octave_pos ) { status=i+1; break;}
+			if( strlen(buffer[next_note_index]) <= octave_pos ) { status=next_note_index; break;}
 			for( int k = 0; k <= octave_pos; k++ ) {
-				prev_note[k] = buffer[i-1][k]; 
-				next_note[k] = buffer[i+1][k];
+				prev_note[k] = buffer[last_note_index][k]; 
+				next_note[k] = buffer[next_note_index][k];
 			}
 
 			if( strcmp(prev_note, next_note) ) { 
 				fprintf(stderr, ANSI_BOLD "Note: " ANSI_RESET "tied notes must be the same pitch.\n");
 				status = i+1; break; 
 			}
-		} else { status = i+1; break; }
+		} else if( buffer[i][0] == '^' ) {
+			int k;
+			for( k = 0; k < strlen(buffer[i])-1; k++ ) {
+				if( buffer[i][k] != '^' ) { status = i+1; break; }
+			}
+				if( buffer[i][k] != '(' ) { status = i+1; break; }
+		} else if( buffer[i][0] == ')' ) continue;
+		else { status = i+1; break; }
 	}
 	return status;
 }
@@ -389,14 +422,13 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 		if( line[i] == COMMENT_CHAR && line[i-1] == ' ' ) { no_line_elements--; break; }
 		else if( line[i] == ' ' ) { 
 			no_line_elements++;
-			while( line[i] == ' ' ) { i++; }
-			i--;
+			while( line[i+1] == ' ' ) { i++; }
 		}
 	}
 	no_line_elements++;
 
 	/* construct an array of the line, delimited by spaces */
-	char **line_elements = (char**)malloc(no_line_elements*sizeof(char*));
+	char **line_elements = malloc(no_line_elements*sizeof(char*));
 	int pos_in_line = 0;
 	for( int i = 0; i < no_line_elements; i++ ) {
 		line_elements[i] = (char*)malloc(32*sizeof(char));
@@ -412,13 +444,13 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 	}
 
 	/* this switch handles checking the line for commands first */
-	switch ( parse_for_command(line, line_number) ) {
+	switch ( parse_command_or_macrodef(line, line_number) ) {
 		case COMMAND:
 			*buffer = line_elements;
 			*buffer_elements = no_line_elements;
 			return COMMAND;
 		case FAILED:
-			free(line_elements);
+			free_array(line_elements, no_line_elements);
 			return FAILED;
 	}
 
@@ -431,6 +463,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 	Note_Node *open_parens = NULL; Note_Node *open_tail = NULL;
 	Note_Node *close_parens = NULL; Note_Node *close_tail = NULL;
 	int no_open_parens = 0, no_close_parens = 0;
+
 	int i;
 	/* ensuring parentheses are invoked legally */
 	for( i = 0; i < no_line_elements; i++ ) {
@@ -459,6 +492,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			add2end(&close_parens, &close_tail, temp); no_close_parens++;
 			}
 	}
+
 	if( exit_status == FAILED ) {
 		fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character(s) in parenthesis phrase.\n", line_number);
 		print_error_line(line, line_number, line_elements[i]);
@@ -477,11 +511,30 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			}
 		} else exit_status = FAILED;
 	}
+
 	if( exit_status == FAILED ) {
 		fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "open and close-parentheses do not match.\n", line_number);
+	} else {
+		char **temp_buffer = malloc(no_line_elements*sizeof(char*));
+		for( int i = 0; i < no_line_elements; i++ ) {
+			temp_buffer[i] = malloc(32*sizeof(char));
+			memset(temp_buffer[i], '\0', 32);
+			strncpy(temp_buffer[i], line_elements[i], 32);
+		}
+		int stat = validate_buffer(no_line_elements, temp_buffer);
+		for( int i = 0; i < no_line_elements; i++ ) {
+			free(temp_buffer[i]);
+		}
+		free(temp_buffer);
+		if( stat != NORMAL ) {
+			fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character(s) in note.\n", line_number);
+			print_error_line(line, line_number, line_elements[stat-1]);
+			exit_status = FAILED;
+		}
 	}
+
 	/* expanding notes' time mods within parens */
-	else {
+	if( exit_status != FAILED ) {
 		Note_Node *o_temp = open_tail;
 		Note_Node *c_temp = close_tail;
 		int local_time_mods = 0;
@@ -490,6 +543,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			local_time_mods = o_temp->NO_TIME_MODS;	
 			int i;
 			for( i = o_temp->INDEX+1; line_elements[i][0] != ')'; i++ ) {
+				int length = strlen(line_elements[i]);
 				if( line_elements[i][0] == '-' && line_elements[i][1] == '\0' ) continue;
 				char cpy[32]; strncpy(cpy, line_elements[i], 32);
 				Effect_Package temp = parse_effects_macros(cpy);
@@ -498,14 +552,13 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 				 * time mod between the note and macro so as to feed legal
 				 * input to the buffer validation and conversion functions 
 				 * later on */
-				if( temp.name != NO_EFFECT ) {
+				if( temp.name != NO_EFFECT || line_elements[i][length-1] == '*' ) {
 					int startof_macro = 0;
 					while( line_elements[i][startof_macro] != '[' &&
-								 line_elements[i][startof_macro] != '{' &&
-								 line_elements[i][startof_macro] != '<' ) {
+								 line_elements[i][startof_macro] != '*' ) {
 						startof_macro++; 
 					}
-					for( int k = startof_macro; k < startof_macro+5; k++ ) {
+					for( int k = startof_macro; k < length; k++ ) {
 						macro_temp[k-startof_macro] = line_elements[i][k];
 						line_elements[i][k] = '\0';
 					}
@@ -525,48 +578,38 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			o_temp = open_tail;
 			c_temp = close_tail;
 		}
-
-		/* adjusting the number of elements in the buffer array and 
-		 * removing parentheses after expansion */
-		if( no_open_parens > 0 ) {
-			int no_new_elements = no_line_elements - (2 * no_open_parens);
-			char **new_elements = malloc(no_new_elements*sizeof(char*));
-			int old_index = 0;
-			for( int i = 0; i < no_new_elements; i++ ) {
-				if( line_elements[old_index][0] == '\0' ) {
-					i--; old_index++;
-					continue;
-				}
-				new_elements[i] = malloc(32*sizeof(char));
-				memset(new_elements[i], '\0', 32);
-				strncpy(new_elements[i], line_elements[old_index], 32);
-				old_index++;
-			}
-			for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
-			free(line_elements);
-			line_elements = new_elements;
-			no_line_elements = no_new_elements;
+	} else {
+		Note_Node *o_temp = open_tail;
+		Note_Node *c_temp = close_tail;
+		int paren_counter = no_open_parens;
+		while( paren_counter > 0 ) {
+			del_from_end(&open_parens, &open_tail);
+			del_from_end(&close_parens, &close_tail);
+			paren_counter--;
+			o_temp = open_tail;
+			c_temp = close_tail;
 		}
 	}
 
-	/* checks the validity of the buffer once fully assembled */
-	if( exit_status != FAILED ) {
-		char **temp_buffer = malloc(no_line_elements*sizeof(char*));
-		for( int i = 0; i < no_line_elements; i++ ) {
-			temp_buffer[i] = malloc(32*sizeof(char));
-			memset(temp_buffer[i], '\0', 32);
-			strncpy(temp_buffer[i], line_elements[i], 32);
+	/* adjusting the number of elements in the buffer array and 
+	 * removing parentheses after expansion */
+	if( no_open_parens > 0 && exit_status != FAILED ) {
+		int no_new_elements = no_line_elements - (2 * no_open_parens);
+		char **new_elements = malloc(no_new_elements*sizeof(char*));
+		int old_index = 0;
+		for( int i = 0; i < no_new_elements; i++ ) {
+			if( line_elements[old_index][0] == '\0' ) {
+				i--; old_index++;
+				continue;
+			}
+			new_elements[i] = malloc(32*sizeof(char));
+			memset(new_elements[i], '\0', 32);
+			strncpy(new_elements[i], line_elements[old_index], 32);
+			old_index++;
 		}
-		int stat = validate_buffer(no_line_elements, temp_buffer);
-		for( int i = 0; i < no_line_elements; i++ ) {
-			free(temp_buffer[i]);
-		}
-		free(temp_buffer);
-		if( stat != NORMAL ) {
-			fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character(s) in note.\n", line_number);
-			print_error_line(line, line_number, line_elements[stat-1]);
-			exit_status = FAILED;
-		}
+		free_array(line_elements, no_line_elements);
+		line_elements = new_elements;
+		no_line_elements = no_new_elements;
 	}
 
 	*buffer = line_elements;
@@ -576,40 +619,47 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 
 Note_Node *convert_from_string(char *string, Key_Map *keymap, int **freq_table, double tempo) {
 	Note_Node *int_rep = malloc(sizeof(Note_Node));
-	/* obtain ascii pitch representation */	
+
 	char pitch[3] = "";
 	int i = 0;
 	while( string[i] != 'o' 
 			&& string[i] != '^' 
 			&& string[i] != '.' 
 			&& string[i] != ',' 
+			&& string[i] != '*'
 			&& string[i] != '\0' ) {	
 		pitch[i] = string[i];
 		i++;
 	}
 	pitch[3] = '\0';
-	/* applying the key signature */
+	
 	int k = 0;
 	while( keymap[k].name != NULL ) {
-		if( pitch[0] == keymap[k].name[0] ) {
-			if( pitch[1] != '#' && pitch[1] != 'b' && pitch[1] != 'n' ) {
+		if( pitch[0] == keymap[k].name[0] && 
+				( pitch[1] != '#' && pitch[1] != 'b' && pitch[1] != 'n' ) ) {
 				pitch[2] = pitch[1]; 
 			  pitch[1] = keymap[k].accidental; 
-			}
 		}
 		k++;
 	}
+
 	int_rep->frequency = get_freq_from_string(pitch, freq_table);
 
-	/* obtain ascii timing representation */
+	int string_len = strlen(string);
 	char time[32];
 	memset(time, '\0', 32);
 	int j = 0;
-	while( i < strlen(string) ) {
+	while( i < string_len ) {
 		time[j] = string[i];
 		i++; j++;
 	}
-	int_rep->duration  = get_duration_from_string(time, tempo);
+
+	int_rep->duration = get_duration_from_string(time, tempo);
+
+	if( string[string_len-1] == '*' ) {
+		if( int_rep->duration-Staccato_Time > 0 ) int_rep->duration -= Staccato_Time;
+		else string[string_len-1] = ' '; /* negates staccato if a rest greater than the length of the note is called for */
+	}
 
 	return int_rep;
 }
@@ -645,6 +695,13 @@ void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node
 			int_rep = convert_from_string(buffer[i], keymap, freq_table, tempo);
 			add2end(start, tail, int_rep);	
 		}		
+
+		if( buffer[i][strlen(buffer[i])-1] == '*' ) {
+			int_rep = malloc(sizeof(Note_Node));
+			int_rep->frequency = 1;
+			int_rep->duration  = Staccato_Time;
+			add2end(start, tail, int_rep);
+		}
 	}
 }
 
@@ -689,32 +746,31 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **fre
 		line_number++;
 		stat = fgets(line, 256, infile);
 		if( stat == NULL ) break; /* breaks at EOF */
-		if( line[0] == '\n' || line[0] == COMMENT_CHAR ) continue; /* ignores empty lines */
-		line[strlen(line)-1] = '\0'; /*ensures null terminate */
+		if( line[0] == '\n' || line[0] == COMMENT_CHAR ) continue; 
+		line[strlen(line)-1] = '\0'; 
 
 		elements = get_line_buffer(line, line_number, &buffer, &no_buff_elements);
-		/* program will not abort on bad input if input source
-		 * is stdin; otherwise exit */
 		if( elements == FAILED ) { 
-			if( infile == stdin ) continue;
-			else { exit = ERROR_EXIT; break; }
+			if( infile == stdin ) { 
+				free_array(buffer, no_buff_elements);
+				continue;
+			} else { exit = ERROR_EXIT; break; }
 		} else if( elements == COMMAND ) { 
-			if( !strcmp(buffer[1], "tempo") ) command_tempo(atoi(buffer[2]), &Tempo);
-			else if( !strcmp(buffer[1], "key") ) command_key(buffer[2], buffer[3], *Key_Str, key);
-			else if( !strcmp(buffer[1], "arprate") ) command_arprate(atoi(buffer[2]), &Arpeggio_Rate);
-			for( int i = 0; i < no_buff_elements; i++ ) { free(buffer[i]); }
-			free(buffer);
+			if     ( !strcmp(buffer[1], "tempo") )    command_tempo(atoi(buffer[2]), &Tempo);
+			else if( !strcmp(buffer[1], "key") )      command_key(buffer[2], buffer[3], *Key_Str, key);
+			else if( !strcmp(buffer[1], "arprate") )  command_arprate(atoi(buffer[2]), &Arpeggio_Rate);
+			else if( !strcmp(buffer[1], "staccato") ) command_staccato(atof(buffer[2]), &Staccato_Time);
+
+			free_array(buffer, no_buff_elements);
 			continue;
 		}
 		/* building intermediate representation from buffer */	
 		buffer_to_intrep(buffer, no_buff_elements, &Notes_Array, &tail, *key, freq_table, Tempo);
-		for( int i = 0; i < no_buff_elements; i++ ) { free(buffer[i]); }
-		free(buffer);
+		free_array(buffer, no_buff_elements);
 	}
 
 	if( elements == FAILED && outfile != stdout ) {
-		for( int i = 0; i < no_buff_elements; i++ ) { free(buffer[i]); }
-		free(buffer);
+		free_array(buffer, no_buff_elements);
 		fprintf(stderr, "Input not succesfully written to file.\n");
 		exit = ERROR_EXIT;
 	}
