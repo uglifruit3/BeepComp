@@ -23,6 +23,8 @@ E5 F5^ G5^ - G5 ^( E5 C5 - ) C5 % for the good of all
 set key F M % (key change)
 ^( F5 E5 D5 C5 ) r % ones who are dead
 
+set staccato 20
+
 A4^ B4^ % but there's 
 set arprate 60
 F4[70] A4[38] % no sense
@@ -34,7 +36,7 @@ F4[57] F4[47] % mistake
 A4^ B4^ % you just
 set arprate 50
 F4[47] A4[38] % keep on 
-^( C5[47] C5[45] G4[59] G4[57] ) % trying til you
+^( C5[47] C5[45] G4*[59] G4*[57] ) % trying til you
 ^( F4[59] F4[5B] ) F4[5C] A4[38] % run out of cake
 
 G5^ A5^ % and the 

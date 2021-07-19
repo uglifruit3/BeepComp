@@ -29,14 +29,14 @@ struct fx_node {
 /* the Note_Node struct is also used for temporarily storing the
  * position and associated time mods of parentheses in buffers;
  * these macros provide semantic clarity to that end */
-#define INDEX frequency
+#define INDEX        frequency
 #define NO_TIME_MODS duration
 
-#define ANSI_RED      "\x1b[1;31m"
-#define ANSI_CYAN     "\x1b[36m"	
-#define ANSI_BOLD     "\x1b[1m"
-#define ANSI_UNDR     "\x1b[4;37m"
-#define ANSI_RESET    "\x1b[0m"
+#define ANSI_RED   "\x1b[1;31m"
+#define ANSI_CYAN  "\x1b[36m"	
+#define ANSI_BOLD  "\x1b[1m"
+#define ANSI_UNDR  "\x1b[4;37m"
+#define ANSI_RESET "\x1b[0m"
 
 #define TRUE  1
 #define FALSE 0

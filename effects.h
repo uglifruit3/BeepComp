@@ -22,12 +22,13 @@ typedef struct fx_node Effect_Package;
 
  * table of effect values for Effect_Package 
  *
- *    NAME    |   param1  |  param2   |  param3   |    param4     |
+ *   NAME    |   param1  |  param2   |  param3   |    param4     |
  *=================================================================
- * arpeggio   | base note | interval1 | interval2 | arpeggio rate */
+ * arpeggio  | base note | interval1 | interval2 | arpeggio rate */
 
 #include "parse.h"
 
+int expand_parens(char **line_elements, int *no_line_elements, char *line, int line_no);
 
 unsigned short int hexchar_to_dec(char hexchar);
 

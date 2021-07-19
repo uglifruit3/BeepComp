@@ -8,12 +8,12 @@
 
 static const char *commands[] = {
 /*	 command name - argument format */
-	   "tempo",       "%f",				
-	   "key",         "%s %c",
-		 "arprate",     "%i",
-		 "staccato",    "%f",
+		"tempo",          "%f",				
+		"key",            "%s %c",
+		"arprate",        "%i",
+		"staccato",       "%f",
 /*   end of aray sentinel */
-		 "\0"
+		"\0"
 };
 
 void command_tempo(double new_tempo, double *tempo);
