@@ -107,6 +107,7 @@ A command is invoked using the `set` keyword, followed by the name of the comman
 * For example, to change the tempo to 60 bpm, one would write `set tempo 60`.
 
 BeepComp interprets keys as a note name, followed by a space and either an 'M' for major or 'm' for minor. 
+
 In a key other than C M/A m, BeepComp will automatically alter the pitches of notes in a key upon compilation. For example, if the key has been set to C# M and BeepComp encounters the note `A5`, it will be interpreted as `Ab5` in keeping with the key signature. This can be negated in the same way as in regular musical notation by using the natural accidental. 
 
 * For example, the key of A minor is expressed as "A m"; C sharp major is expressed as "C# M". 
@@ -124,7 +125,20 @@ BeepComp supports an arpeggiation macro to simulate polyphony on `beep` by produ
 
 BeepComp expands an arpeggio to play at a rate of 60 tones per second by default. This can be adjusted using the `arprate` command mentioned above and passing the new arpeggiation rate as the argument.
 
+**A note on key signatures and arpeggios:** if the first note associated with an arpeggio is modified by the key signature, the half-step arguments will denote half-steps away from the modified note.
+
 The only effects macro currently supported is arpeggiation. See Limitations for an explanation of why.
+
+### Custom Text Macros
+Users may define and invoke one-line, plaintext macros. Definition is accomplished using the `define` keyword, followed by the name of the macro prefaced with a '$' character, and the macro itself enclosed in double quotes. Like a command, macro definitions must occupy their own, singular line.
+
+* For example, one could create a macro for a certain repetetive phrase like so: `define $macro1 "^^( C4 E4 D4 C5 D4 E4 C4 E4 D4 C5 D4 E4 )"`
+
+To invoke a macro, the macro name (again prefaced with a '$' character) if placed anywhere a note element would normally go.
+
+* `A4, A4 $macro1 ^( $macro1 )` would expand the contents of $macro1 once, then expand them again within the parentheses, doubling the rate at which the notes are played.
+
+If a previously defined macro is defined again, its contents will be overwritten. Note that BeepComp does not validate the contents of a text macro, but expands them within a line and proceeds to check that line for errors. This also means that the notes in the macro, when expanded, will be processed according to whatever tempo and key signature have already been defined.  
 
 ### Comments
 BeepComp notation includes a means to make comments for helping with song structure/organization. The percent ('%') character is the reserved comment character, and BeepComp will ignore all input on a line after it is detected. BeepComp also ignores blank lines.

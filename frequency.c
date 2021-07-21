@@ -56,7 +56,7 @@ int** gen_freq_table(double tuning_A) {
 
 int get_freq_from_string(char note[3], int** table) {
 	/* using the reference row in the frequency table to find the correct note */
-	if( note[0] == 'r' ) return 1;
+	if( note[0] == 'r' ) return 0;
 	int note_index;
 	for( int i = 0; i < 12; i++ ) {
 		if( note[0] == table[ROWS_IN_TABLE][i] ) { note_index = i; break; }

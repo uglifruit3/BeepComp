@@ -10,7 +10,16 @@
 /* this value is given in tones/second */
 static int Arpeggio_Rate = 60;
 
-enum Effect_Name { NO_EFFECT, ARPEGGIO, PORTAMENTO, VIBRATO };
+enum Effect_Name { NO_EFFECT, ARPEGGIO };
+
+typedef struct mnode {
+	char name[32];
+	char macro[256];
+	struct mnode *next;
+} Macro_Node;
+
+static Macro_Node *Arp_Macros;
+static Macro_Node *Cus_Macros;
 
 /* struct for dealing with effects */
 typedef struct fx_node Effect_Package;
@@ -27,6 +36,14 @@ typedef struct fx_node Effect_Package;
  * arpeggio  | base note | interval1 | interval2 | arpeggio rate */
 
 #include "parse.h"
+
+void m_add2start(Macro_Node **start, Macro_Node *new);
+Macro_Node *m_search(Macro_Node *list, char *term);
+void m_free_list(Macro_Node **list);
+
+void store_macro(char *line, Macro_Node **macro_list);
+unsigned int expand_cus_macro(char ***buffer, int *no_buffer_elements, char *line, int line_no, Macro_Node *list);
+unsigned int alt_expand_cus_macro(char ***buffer, int *no_buffer_elements, char *line, int line_no, Macro_Node *list);
 
 int expand_parens(char **line_elements, int *no_line_elements, char *line, int line_no);
 

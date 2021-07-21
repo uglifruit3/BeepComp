@@ -262,16 +262,17 @@ unsigned int parse_command_or_macrodef(char *line, int line_number) {
 		return FAILED;
 	}
 	else if( !strcmp(first_str, MACRO_DEF_KEYWORD) ) {
-		char macro_name[64];
+		char macro_name[64]; memset(macro_name, '\0', 64);
 		sscanf(line, "%*s %s", macro_name);
-		if( macro_name[0] == ARP_MACRO_CHAR ) {
-			printf("Arpeggio macro defined!\n");
-		} else if( macro_name[0] == CUS_MACRO_CHAR ) {
-			printf("Text macro defined!\n");
-		}
+		if( macro_name[0] == ARP_MACRO_CHAR ) return ARP_MDEF;
+		if( macro_name[0] == CUS_MACRO_CHAR ) return CUS_MDEF;
+		
+		fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "macro incorrectly defined.\n", line_number );
+		if( macro_name[0] == '\0' ) print_error_line(line, line_number, "define");
+		else                        print_error_line(line, line_number, macro_name);
 		return FAILED;
-	} else 
-		return NONE;
+	} 
+	return NONE;
 }
 
 Effect_Package parse_effects_macros(char *element) {
@@ -409,29 +410,80 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 	return status;
 }
 
-unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *buffer_elements) {
+unsigned int validate_macrodef(int no_buffer_elements, char **buffer, int macro_type, char *line, int line_number) {
+	char mtype[24]; memset(mtype, '\0', 24);
+	char open_char, close_char;
+	if( macro_type == CUS_MDEF ) { strncat(mtype, "text", 20);            open_char =      close_char = '\"'; }
+	else                         { strncat(mtype, "custom arpeggio", 20); open_char = '['; close_char = ']';  }
+	if( no_buffer_elements < 3 ) {
+		fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "%s macro missing definition.\n", line_number, mtype);
+		print_error_line(line, line_number, buffer[1]);
+		return FALSE;
+	} else if( buffer[2][0] != open_char || buffer[no_buffer_elements-1][strlen(buffer[no_buffer_elements-1])-1] != close_char ) {
+		fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "%s macro incorrectly defined.\n", line_number, mtype);
+		print_error_line(line, line_number, line);
+		return FALSE;
+	}
+
+	if( macro_type == CUS_MDEF ) return TRUE;
+
+	int i = 2;
+	int no_temp_elements = no_buffer_elements-2;
+	if( strlen(buffer[2]) == 1 ) { no_temp_elements--; i++; }
+	if( strlen(buffer[no_buffer_elements-1]) == 1 ) no_temp_elements--;
+
+	char **temp_buffer = malloc(no_temp_elements*sizeof(char*));
+	int temp_start = i;
+	for( i; i < no_temp_elements+temp_start; i++ ) {
+		temp_buffer[i-temp_start] = malloc(32*sizeof(char));
+		memset(temp_buffer[i-temp_start], '\0', 32);
+		if( i == 2 ) {
+			int j = 1;
+			while( buffer[i][j] != '\0' ) {
+				temp_buffer[i-temp_start][j-1] = buffer[i][j];
+				j++;
+			}
+			temp_buffer[i-temp_start][j] = '\0'; 
+		} else strncpy(temp_buffer[i-temp_start], buffer[i], 32);
+	}
+
+	int exit = TRUE;
+	for( i = 0; i < no_temp_elements; i++ ) {
+		if( atoi(temp_buffer[i]) == 0 && strcmp(temp_buffer[i], "0") ) { 
+			fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "arpeggio macro definition contains invalid parameters.\n", line_number);
+			print_error_line(line, line_number, temp_buffer[i]);
+			exit = FALSE;
+		}
+	}
+
+	free_array(temp_buffer, no_temp_elements);
+	return exit;
+}
+
+unsigned int get_no_elements(char *string) {
 	/* helps resolve floating spaces at the ends of lines */
-	int back_index = strlen(line)-1;
-	while( line[back_index] == ' ' ) { 
-		line[back_index] = '\0';
+	int back_index = strlen(string)-1;
+	while( string[back_index] == ' ' ) { 
+		string[back_index] = '\0';
 		back_index--;
 	}
 	/* identify number of elements in the line separated by spaces */
 	int no_line_elements = 0;
-	for( int i = 0; i < strlen(line); i++ ) {
-		if( line[i] == COMMENT_CHAR && line[i-1] == ' ' ) { no_line_elements--; break; }
-		else if( line[i] == ' ' ) { 
+	for( int i = 0; i < strlen(string); i++ ) {
+		if( string[i] == COMMENT_CHAR && string[i-1] == ' ' ) { no_line_elements--; break; }
+		else if( string[i] == ' ' ) { 
 			no_line_elements++;
-			while( line[i+1] == ' ' ) { i++; }
+			while( string[i+1] == ' ' ) { i++; }
 		}
 	}
-	no_line_elements++;
+	return ++no_line_elements;
+}
 
-	/* construct an array of the line, delimited by spaces */
-	char **line_elements = malloc(no_line_elements*sizeof(char*));
+char **get_elements_array(char *line, int no_elements) {
+	char **line_elements = malloc(no_elements*sizeof(char*));
 	int pos_in_line = 0;
-	for( int i = 0; i < no_line_elements; i++ ) {
-		line_elements[i] = (char*)malloc(32*sizeof(char));
+	for( int i = 0; i < no_elements; i++ ) {
+		line_elements[i] = malloc(32*sizeof(char));
 		memset(line_elements[i], '\0', 32);
 		int element_index = 0;
 		while( line[pos_in_line] != ' ' && line[pos_in_line] != '\0' && line[pos_in_line] != '\n' ) {
@@ -442,9 +494,18 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 		line_elements[i][element_index+1] = '\0';
 		while( line[pos_in_line] == ' ' ) { pos_in_line++; }
 	}
+	return line_elements;
+}
+
+unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *buffer_elements) {
+	int no_line_elements = get_no_elements(line);
+	char **line_elements = get_elements_array(line, no_line_elements);
 
 	/* this switch handles checking the line for commands first */
-	switch ( parse_command_or_macrodef(line, line_number) ) {
+	int stat = parse_command_or_macrodef(line, line_number);
+	switch ( stat ) {
+		case NONE:
+			break;
 		case COMMAND:
 			*buffer = line_elements;
 			*buffer_elements = no_line_elements;
@@ -453,17 +514,37 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			*buffer = line_elements;
 			*buffer_elements = no_line_elements;
 			return FAILED;
+		case CUS_MDEF:
+		case ARP_MDEF:
+			int valid = validate_macrodef(no_line_elements, line_elements, stat, line, line_number);	
+			if( !valid ) {
+				*buffer = line_elements;
+				*buffer_elements = no_line_elements;
+				stat = FAILED;
+			} else { //free_array(line_elements, no_line_elements);
+				for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
+				free(line_elements);
+			}
+
+			return stat;
 	}
 
 	/* it is now presumed the line specifies notes */
 	int exit_status = NOTE;
+	exit_status = alt_expand_cus_macro(&line_elements, &no_line_elements, line, line_number, Cus_Macros);
+	if( exit_status == FAILED ) {
+		*buffer = line_elements;
+		*buffer_elements = no_line_elements;
+		return FAILED;
+	}
+
 	char **temp_buffer = malloc(no_line_elements*sizeof(char*));
 	for( int i = 0; i < no_line_elements; i++ ) {
 		temp_buffer[i] = malloc(32*sizeof(char));
 		memset(temp_buffer[i], '\0', 32);
 		strncpy(temp_buffer[i], line_elements[i], 32);
 	}
-	int stat = validate_buffer(no_line_elements, temp_buffer);
+	stat = validate_buffer(no_line_elements, temp_buffer);
 	free_array(temp_buffer, no_line_elements);
 	if( stat != NORMAL ) {
 		fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "illegal character(s) in element.\n", line_number);
@@ -473,11 +554,12 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 		return FAILED;
 	}
 
-		int no_old_elements = no_line_elements;
+	int no_old_elements = no_line_elements;
 	exit_status = expand_parens(line_elements, &no_line_elements, line, line_number);
 	for( int i = 0; i < no_old_elements; i++ ) {
 		if( line_elements[i][0] == '\0' ) free(line_elements[i]);
 	}
+
 	*buffer = line_elements;
 	*buffer_elements = no_line_elements;
 	return exit_status;
@@ -564,7 +646,7 @@ void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node
 
 		if( buffer[i][strlen(buffer[i])-1] == '*' ) {
 			int_rep = malloc(sizeof(Note_Node));
-			int_rep->frequency = 1;
+			int_rep->frequency = FALSE;
 			int_rep->duration  = Staccato_Time;
 			add2end(start, tail, int_rep);
 		}
@@ -573,18 +655,24 @@ void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node
 
 void write_to_file(Note_Node *representation, FILE *outfile, Note_Node *tail) {
 	Note_Node *temp = representation;
-	int start = 1;
-	
 	fprintf(outfile, "#!/bin/sh\nbeep ");
+	fprintf(outfile, "-f %d -l %f ", temp->frequency, temp->duration);
+	temp = temp->next;
+
 	/* list traversal */
+	int silent_time = FALSE;
 	while( temp != tail ) {
-		if( start == 1 ) fprintf(outfile, "-f %d -l %f \\\n", temp->frequency, temp->duration);
-		else fprintf(outfile, "-n -f %d -l %f \\\n", temp->frequency, temp->duration);
-		start = 0;
-		
+		if( temp->frequency == FALSE ) {
+			silent_time += temp->duration;
+		} else { 
+			fprintf(outfile, "-D %i \\\n", silent_time);
+			fprintf(outfile, "-n -f %d -l %f ", temp->frequency, temp->duration);
+			silent_time = FALSE;
+		}
 		temp = temp->next;
 	}
-	fprintf(outfile, "-n -f %d -l %f \\\n", temp->frequency, temp->duration);
+	fprintf(outfile, "-D %i \\\n", silent_time);
+	fprintf(outfile, "-n -f %d -l %f -D 0\n", temp->frequency, temp->duration);
 }
 
 unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **freq_table, Key_Map **key) {
@@ -597,10 +685,11 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **fre
 	unsigned int linked_list_nodes = 0;
 	Note_Node *Notes_Array = NULL;
 	Note_Node *tail = NULL;
+	Arp_Macros = Cus_Macros = NULL;
 
 	/* initializing buffer */
 	char **buffer = NULL;
-	int elements= 0;
+	int elements = 0;
 	int no_buff_elements;
 
 	/* this loop cycles through each line of input, builds a
@@ -629,6 +718,12 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **fre
 
 			free_array(buffer, no_buff_elements);
 			continue;
+		} else if( elements == ARP_MDEF ) {
+			store_macro(line, &Arp_Macros);
+			continue;
+		} else if( elements == CUS_MDEF ) {
+			store_macro(line, &Cus_Macros);
+			continue;
 		}
 		/* building intermediate representation from buffer */	
 		buffer_to_intrep(buffer, no_buff_elements, &Notes_Array, &tail, *key, freq_table, Tempo);
@@ -644,5 +739,7 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **fre
 
 	free(line);
 	free_list(&Notes_Array, &tail); 
+	m_free_list(&Arp_Macros);
+	m_free_list(&Cus_Macros);
 	return exit;
 }

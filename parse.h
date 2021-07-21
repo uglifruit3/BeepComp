@@ -48,7 +48,7 @@ struct fx_node {
 #define MACRO_DEF_KEYWORD "define"
 
 enum Error_State  { NORMAL, TIME_ERROR, NOTE_ERROR, NAME_ERROR, ARG_ERROR, NO_ARGS_PASSED_ERROR }; 
-enum Parse_Status { COMMAND, NOTE, MACRO, FAILED, NONE };
+enum Parse_Status { COMMAND, NOTE, ARP_MDEF, CUS_MDEF, FAILED, NONE };
 enum Exit_Status { NORMAL_EXIT, ERROR_EXIT, HELP_EXIT };
 
 /* linked list helper functions */
@@ -66,19 +66,15 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
  * segfault-y behavior. Compares a string and a format.
  * Returns: 0 for match, 1 for no match */
 unsigned int frmtcmp(char *str, char *frmt);
-
 /* Returns: NORMAL or ARG_ERROR from enum Error_State */
 unsigned int argchecker(char *argument, const char *format);
-
 /* Returns: NAME_ERROR, ARG_ERROR, or NORMAL */
 unsigned int validate_command(char *command, char *argument);
 
-/* IN: Error line, line number, and string with the flagged error */
 void print_error_line(char *line, int line_no, char *error_string);
 
 /* Returns: COMMAND, FAILED, or NONE from enum Parse_Status */
 unsigned int parse_command_or_macrodef(char *line, int line_number);
-
 /* Parses a given element in a buffer, identifying a correctly
  * placed effects macro and constructing a more useful 
  * representation. It also alters the element, removing the macro
@@ -86,20 +82,19 @@ unsigned int parse_command_or_macrodef(char *line, int line_number);
  * used) or converted into an intermediate representation */
 Effect_Package parse_effects_macros(char *element);
 
+unsigned int get_no_elements(char *string);
+char **get_elements_array(char *line, int no_elements);
 /* Returns: status from enum Error_State */
 unsigned int validate_buffer(int no_buffer_elements, char **buffer);
-
-/* applies key signatures, parentheticals, etc.
- * IN: a full line, line number, buffer (passed
- *     by reference), and number of buffer elements (by reference)
+unsigned int validate_macrodef(int no_buffer_elements, char **buffer, int macro_type, char *line, int line_number);
+/* applies key signatures, parentheticals, macros, etc.
  * Returns: FAILED, COMMAND, or NOTE from enum parse_status */
 unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *buffer_elements);
 
 Note_Node *convert_from_string(char *string, Key_Map *keymap, int **freq_table, double tempo);
-
 void buffer_to_intrep(char **buffer, int buf_size, Note_Node **start, Note_Node **tail, Key_Map *keymap, int **freq_table, double tempo);
 
 void write_to_file(Note_Node *representation, FILE *outfile, Note_Node *tail);
-
 unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **freq_table, Key_Map **key);
+
 #endif
