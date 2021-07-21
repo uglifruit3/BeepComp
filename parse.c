@@ -531,7 +531,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 
 	/* it is now presumed the line specifies notes */
 	int exit_status = NOTE;
-	exit_status = alt_expand_cus_macro(&line_elements, &no_line_elements, line, line_number, Cus_Macros);
+	exit_status = expand_cus_macro(&line_elements, &no_line_elements, line, line_number, Cus_Macros);
 	if( exit_status == FAILED ) {
 		*buffer = line_elements;
 		*buffer_elements = no_line_elements;

@@ -78,68 +78,9 @@ void store_macro(char *line, Macro_Node **macro_list) {
 	free_array(line_elements, no_line_elements);
 }
 
-/* develop a recursive technique to make this not suck as much */
 unsigned int expand_cus_macro(char ***buffer, int *no_buffer_elements, char *line, int line_no, Macro_Node *list) {
-	/* get the number of macros and where they are */
-	int macro_indices[32];
-	int no_macros = 0;
-	for( int i = 0; i < *no_buffer_elements; i++ ) {
-		if( buffer[0][i][0] == '$' ) { 
-			if( m_search(list, buffer[0][i]) == NULL ) {
-				fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "macro \"%s\" not defined.\n", line_no, buffer[0][i]);
-				print_error_line(line, line_no, buffer[0][i]);
-				return FAILED;
-			}
-			macro_indices[no_macros] = i;
-			no_macros++;
-		}
-	}
-
-	for( int i = 0; i < no_macros; i++ ) {
-		Macro_Node *temp = m_search(list, buffer[0][macro_indices[i]]);
-		int macro_elements = get_no_elements(temp->macro);
-		char **macro_buffer = get_elements_array(temp->macro, macro_elements);
-		char **end_plc = malloc((*no_buffer_elements-macro_indices[i]-1)*sizeof(char*));
-		int j_offset = macro_indices[i]+1;
-
-		/* cut off the buffer that follows the macro */
-		for( int j = j_offset; j < *no_buffer_elements; j++ ) {
-			end_plc[j-j_offset] = malloc(32*sizeof(char)); 
-			strncpy(end_plc[j-j_offset], buffer[0][j], 32);
-			memset(buffer[0][j], '\0', 32);
-		}
-
-		/* reallocate buffer to accommodate expanded macro text */
-		char **newp = (char **) realloc(buffer[0], (*no_buffer_elements+macro_elements-1)*sizeof(char*));	
-		buffer[0] = newp;
-
-		/* splice macro text into buffer */
-		for( int j = 0; j < macro_elements; j++ ) {
-			if( buffer[0][j+j_offset-1] == NULL ) buffer[0][j+j_offset-1] = malloc(32*sizeof(char));
-			strncpy(buffer[0][j+j_offset-1], macro_buffer[j], 32);
-		}
-
-		/* splice buffer end after macro is inserted */
-		for( int j = macro_elements+j_offset-1; j < *no_buffer_elements+macro_elements-1; j++ ) {
-			buffer[0][j] = malloc(32*sizeof(char));
-			strncpy(buffer[0][j], end_plc[j-(macro_elements+j_offset-1)], 32);
-		}
-
-		/* clean up */
-		for( int j = 0; j < macro_elements; j++ ) { free(macro_buffer[j]); }
-		free(macro_buffer);
-		free_array(end_plc, *no_buffer_elements-macro_indices[i]-1);
-		temp = NULL;
-		/* expand the number of buffer elements to reflect expanded macro size */
-		*no_buffer_elements += (macro_elements-1);
-		/* increase index of other macros to reflect expanded macro size */
-		for( int j = i+1; j < no_macros; j++ ) { macro_indices[j] += (macro_elements-1); }
-	}
-	return NOTE;
-}
-
-unsigned int alt_expand_cus_macro(char ***buffer, int *no_buffer_elements, char *line, int line_no, Macro_Node *list) {
 	Macro_Node *temp;
+	/* search backward for macro name */
 	int macro_found = FALSE;
 	int i;
 	for( i = *no_buffer_elements-1; i >= 0; i-- ) {
@@ -202,7 +143,7 @@ unsigned int alt_expand_cus_macro(char ***buffer, int *no_buffer_elements, char 
 	*no_buffer_elements = *no_buffer_elements+macro_elements-1;
 	*buffer = temp_buffer;
 
-	return alt_expand_cus_macro(buffer, no_buffer_elements, line, line_no, list);
+	return expand_cus_macro(buffer, no_buffer_elements, line, line_no, list);
 }
 
 int expand_parens(char **line_elements, int *no_line_elements, char *line, int line_no) {

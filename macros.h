@@ -43,7 +43,6 @@ void m_free_list(Macro_Node **list);
 
 void store_macro(char *line, Macro_Node **macro_list);
 unsigned int expand_cus_macro(char ***buffer, int *no_buffer_elements, char *line, int line_no, Macro_Node *list);
-unsigned int alt_expand_cus_macro(char ***buffer, int *no_buffer_elements, char *line, int line_no, Macro_Node *list);
 
 int expand_parens(char **line_elements, int *no_line_elements, char *line, int line_no);
 
