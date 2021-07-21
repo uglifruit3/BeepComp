@@ -24,7 +24,7 @@ struct fx_node {
 	int param4;
 };
 
-#include "effects.h"
+#include "macros.h"
 
 /* the Note_Node struct is also used for temporarily storing the
  * position and associated time mods of parentheses in buffers;

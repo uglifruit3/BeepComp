@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "effects.h"
+#include "macros.h"
 #include "parse.h"
 #include "commands.h"
 #include "frequency.h"

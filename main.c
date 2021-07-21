@@ -6,7 +6,7 @@
 #include "parse.h"
 #include "timing.h"
 #include "commands.h"
-#include "effects.h"
+#include "macros.h"
 
 
 char *Key_Str;

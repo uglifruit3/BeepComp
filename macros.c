@@ -3,7 +3,7 @@
 #include <math.h>
 
 #include "parse.h"
-#include "effects.h"
+#include "macros.h"
 #include "frequency.h"
 #include "timing.h"
 
