@@ -134,7 +134,7 @@ Users may define and invoke one-line, plaintext macros. Definition is accomplish
 
 * For example, one could create a macro for a certain repetetive phrase like so: `define $macro1 "^^( C4 E4 D4 C5 D4 E4 C4 E4 D4 C5 D4 E4 )"`
 
-To invoke a macro, the macro name (again prefaced with a '$' character) if placed anywhere a note element would normally go.
+To invoke a macro, the macro name (again prefaced with a '$' character) is placed anywhere a note element would normally go.
 
 * `A4, A4 $macro1 ^( $macro1 )` would expand the contents of $macro1 once, then expand them again within the parentheses, doubling the rate at which the notes are played.
 
