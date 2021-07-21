@@ -93,7 +93,7 @@ BeepComp also accepts three non-note elements to aid in designing more complex r
 **Note:** rests, ties, and parentheses must be surrounded by at least one space to avoid being interpreted as elements of a note. So, `^^(A4 A5)` and `A4-A4` are invalid syntax and will produce errors. They should instead be written as `^^( A4 A5 )` and `A4 - A4` respectively.
 
 ### Defaults and Commands
-BeepComp uses a default tempo of 90 beats per minute when determing the duration of notes. The default key signature is C Major, meaning that there will be no changes to the pitches of any notes. These can both be altered at any point, and as many times as necessary, using commands.
+BeepComp uses a default tempo of 90 beats per minute when determining the duration of notes. The default key signature is C Major, meaning that there will be no changes to the pitches of any notes. These can both be altered at any point, and as many times as necessary, using commands.
 
 A command is invoked using the `set` keyword, followed by the name of the command and the arguments it accepts. **Each command must reside on its own line.** BeepComp recognizes the following commands:
 
@@ -132,7 +132,7 @@ The only effects macro currently supported is arpeggiation. See Limitations for 
 ### Custom Text Macros
 Users may define and invoke one-line, plaintext macros. Definition is accomplished using the `define` keyword, followed by the name of the macro prefaced with a '$' character, and the macro itself enclosed in double quotes. Like a command, macro definitions must occupy their own, singular line.
 
-* For example, one could create a macro for a certain repetetive phrase like so: `define $macro1 "^^( C4 E4 D4 C5 D4 E4 C4 E4 D4 C5 D4 E4 )"`
+* For example, one could create a macro for a certain repetitive phrase like so: `define $macro1 "^^( C4 E4 D4 C5 D4 E4 C4 E4 D4 C5 D4 E4 )"`
 
 To invoke a macro, the macro name (again prefaced with a '$' character) is placed anywhere a note element would normally go.
 
