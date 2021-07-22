@@ -148,9 +148,9 @@ To invoke a macro, the macro name (again prefaced with a '$' character) is place
 Note that BeepComp does not validate the contents of a text macro, but expands them within a line and proceeds to check that line for errors. This also means that the notes in the macro, when expanded, will be processed according to whatever tempo and key signature are currently defined. Additionally, this allows macro definitions to contain other macro invocations, which may not need to be defined then and which may be redefined whenever.
 
 #### Custom Arpeggio Macros
-Custom arpeggio macros are useful for surpassing the limitations of the built-in arpeggio macros (no steps beneath original note, limit of 15 half steps above original note, 3 notes only), and are invoked in the same way. Definitions consist of specified half step intervals that the arpeggio will play. Half step intervals are specified in base 10 and are separated by spaces.
+Custom arpeggio macros are useful for surpassing the limitations of the built-in arpeggio macros (no steps beneath original note, limit of 15 half steps above original note, 3 notes only), and are invoked in the same way. Definitions consist of an arbitrary number of specified half step intervals that the arpeggio will play. Half step intervals are specified in base 10 and are separated by spaces.
 
-* For example, one could create a custom arpeggio macro like so: `define @macro1 [4 7 12 7 4 0 -4 -7 -12 -7 -4 0]`. The macro can then be invoked where a built-in arpeggio macro would be in a note.
+* For example, one could create a custom arpeggio macro like so: `define @macro1 [12 24 36 24 12 0 -12 -24 -36 -24 -12]`. The macro can then be invoked where a built-in arpeggio macro would be in a note.
 * `C4,@macro1 C5,@macro1` invokes the arpeggio macro twice on two different notes.
 
 Note that custom arpeggio macros will be processed according to the current arprate value.

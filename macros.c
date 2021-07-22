@@ -59,14 +59,17 @@ void store_macro(char *line, Macro_Node **macro_list) {
 	else                        { open_char = '['; close_char = ']'; } 
 	for( int i = 2; i < no_line_elements; i++ ) {
 		if( i == 2 ) {
+			/* isolated open character */
 			if( strlen(line_elements[i]) == 1 ) continue;
+			/* macro is one element, surrounded by open/close with no spaces*/
 			else if( no_line_elements == 3 ) { 
 				int j = 1;
-				while( line_elements[i][j] != '\"' ) {
+				while( line_elements[i][j] != close_char ) {
 					macro->macro[j-1] = line_elements[i][j];
 					j++;
 				}
 				break;
+			/* no space between open character and element */
 			} else {
 				int j = 1;
 				while( line_elements[i][j] != '\0' ) {
@@ -77,7 +80,9 @@ void store_macro(char *line, Macro_Node **macro_list) {
 				continue;
 			}
 		} else if( i == no_line_elements-1 ) {
+			/* isolated open character */
 			if( strlen(line_elements[i]) == 1 ) continue;
+			/* no space between close character and element */
 			else line_elements[i][strlen(line_elements[i])-1] = '\0';
 		}
 		strncat(macro->macro, line_elements[i], 32);
