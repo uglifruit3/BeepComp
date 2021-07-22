@@ -87,7 +87,7 @@ BeepComp also accepts three non-note elements to aid in designing more complex r
   * For example, `G#5 - G#5` makes two quarter note G-sharps a singular half note G-sharp.
 * Parentheses
   * Notes may be surrounded by a pair of parentheses, with the open parenthesis prefaced with a set of eigth note characters that specify some duration. Upon compilation, BeepComp will apply that set of eigth note characters to the contained notes' durations.
-  * For example, `^^( A3 C4 E4^ G4 )` is equivalent to `A3^^ C4^^ E4^^^ E4^^`.
+  * For example, `^^( A3 C4 - C4 E4^ G4 )` is equivalent to `A3^^ C4^^ - C4^^ E4^^^ E4^^`.
   * Parentheses may be nested. So, `^( A4 ^( E5 ) A4 )` expands to `A4^ E5^^ A4^`.
 
 **Note:** rests, ties, and parentheses must be surrounded by at least one space to avoid being interpreted as elements of a note. So, `^^(A4 A5)` and `A4-A4` are invalid syntax and will produce errors. They should instead be written as `^^( A4 A5 )` and `A4 - A4` respectively.
