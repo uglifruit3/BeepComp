@@ -41,12 +41,15 @@ void m_add2start(Macro_Node **start, Macro_Node *new);
 Macro_Node *m_search(Macro_Node *list, char *term);
 void m_free_list(Macro_Node **list);
 
+unsigned short int hexchar_to_dec(char hexchar);
+long int max(long int a, long int b);
+
 void store_macro(char *line, Macro_Node **macro_list);
+void *parse_arp_macro(char *element, Macro_Node *list);
+void expand_arp_macro(Note_Node *base_note, Macro_Node *macro, Note_Node **start, Note_Node **tail, int arp_rate);
 unsigned int expand_cus_macro(char ***buffer, int *no_buffer_elements, char *line, int line_no, Macro_Node *list);
 
 int expand_parens(char **line_elements, int *no_line_elements, char *line, int line_no);
-
-unsigned short int hexchar_to_dec(char hexchar);
 
 static void (*fx_macro)(Note_Node **start, Note_Node **tail, Effect_Package effect);
 void expand_arpeggio(Note_Node **start, Note_Node **tail, Effect_Package effect);

@@ -35,6 +35,18 @@ void m_free_list(Macro_Node **list) {
 	free(*list);
 }
 
+unsigned short int hexchar_to_dec(char hexchar) {
+	if     ( hexchar >= '0' && hexchar <= '9' )
+		return hexchar - 48;
+	else if( hexchar >= 'A' && hexchar <= 'F' )
+		return hexchar - 55;
+	else return 16;
+}
+long int max(long int a, long int b) {
+	if( a > b ) return a;
+	return b;
+}
+
 void store_macro(char *line, Macro_Node **macro_list) {
 	Macro_Node *macro = malloc(sizeof(Macro_Node));
 	memset(macro->name, '\0', 32); memset(macro->macro, '\0', 256);
@@ -83,6 +95,92 @@ void store_macro(char *line, Macro_Node **macro_list) {
 	}
 
 	free_array(line_elements, no_line_elements);
+}
+
+void *parse_arp_macro(char *element, Macro_Node *list) {
+	void *out_ptr;
+	int fail  = FAILED;
+	int fail2 = 2*FAILED; /* fail code for if element contains two macros */
+	int none  = NONE;
+	int startof_macro = 0;
+
+	/* identify where the macro starts */
+	while( element[startof_macro] != '@' ) {
+		startof_macro++; 
+		if( startof_macro > strlen(element) ) {
+			out_ptr = &none;
+			return out_ptr;
+		}
+	}
+
+	if( startof_macro < 2 ) {
+		out_ptr = &none;
+		return out_ptr;
+	}
+
+	char temp_clone[32];
+	strncpy(temp_clone, element, 32);
+	if( parse_effects_macros(temp_clone).name != NO_EFFECT ) {
+		out_ptr = &fail2;
+		return out_ptr;
+	}
+	for( int i = startof_macro; i < strlen(element); i++ ) {
+		temp_clone[i] = '\0';
+	}
+	if( parse_effects_macros(temp_clone).name != NO_EFFECT ) {
+		out_ptr = &fail2;
+		return out_ptr;
+	}
+
+	char macro_name[32];
+	memset(macro_name, '\0', 32);
+	int length = strlen(element);
+	for( int i = startof_macro; i < length; i++ ) {
+		macro_name[i-startof_macro] = element[i];
+		element[i] = '\0';
+	}
+
+	Macro_Node *arp_macro = m_search(list, macro_name);
+	if( arp_macro == NULL ) out_ptr = &fail;
+	else                    out_ptr = arp_macro;
+
+	return out_ptr;
+}
+
+void expand_arp_macro(Note_Node *base_note, Macro_Node *macro, Note_Node **start, Note_Node **tail, int arp_rate) {
+	int no_macro_elements = get_no_elements(macro->macro);
+	char **macro_elements = get_elements_array(macro->macro, no_macro_elements);
+
+	long double dbl_total_notes = ((long double)arp_rate/1000.0) * base_note->duration;
+	long int total_notes = (long int)dbl_total_notes;
+	long double note_len = base_note->duration/dbl_total_notes;
+
+	/* accounts for uneven length of note */
+	double final_note_len = note_len;
+	if( dbl_total_notes - total_notes > 0.005 ) {
+		final_note_len = note_len * (dbl_total_notes-total_notes);
+		total_notes++;
+	}
+
+	int *frequencies = malloc((no_macro_elements+1)*sizeof(int));
+	frequencies[0] = base_note->frequency;
+	int base_hsteps = hsteps_from_A4(frequencies[0]);
+	for( int i = 1; i < no_macro_elements+1; i++ ) {
+		frequencies[i] = round_dbl(calc_freq(base_hsteps+atoi(macro_elements[i-1])));
+	}
+
+
+	for( int i = 0; i < total_notes; i++ ) {
+		Note_Node *int_rep = malloc(sizeof(Note_Node));
+		/* cycles through all arpeggio tones */
+		int_rep->frequency = frequencies[i % (no_macro_elements+1)];
+		/* max function deals with edge case that total_notes-1 is 0 */
+		int_rep->duration = note_len - (note_len-final_note_len)*(i/(max(total_notes-1, 1)));
+		add2end(start, tail, int_rep);	
+	}
+
+	free_array(macro_elements, no_macro_elements);
+	free(frequencies);
 }
 
 unsigned int expand_cus_macro(char ***buffer, int *no_buffer_elements, char *line, int line_no, Macro_Node *list) {
@@ -236,10 +334,17 @@ int expand_parens(char **line_elements, int *no_line_elements, char *line, int l
 				 * time mod between the note and macro so as to feed legal
 				 * input to the buffer validation and conversion functions 
 				 * later on */
-				if( temp.name != NO_EFFECT || line_elements[i][length-1] == '*' ) {
+				int cust_arp_macro_index = -1;
+				for( int j = 2; j < strlen(line_elements[i]); j++ ) {
+					if( line_elements[i][j] == '@' ) { cust_arp_macro_index = j; break; }
+				}
+				if( temp.name != NO_EFFECT || 
+						line_elements[i][length-1] == '*' ||
+						cust_arp_macro_index != -1 ) {
 					int startof_macro = 0;
 					while( line_elements[i][startof_macro] != '[' &&
-								 line_elements[i][startof_macro] != '*' ) {
+								 line_elements[i][startof_macro] != '*' &&
+								 line_elements[i][startof_macro] != '@' ) {
 						startof_macro++; 
 					}
 					for( int k = startof_macro; k < length; k++ ) {
@@ -302,18 +407,6 @@ int expand_parens(char **line_elements, int *no_line_elements, char *line, int l
 		free(new_elements);
 	}
 	return exit_status;
-}
-
-unsigned short int hexchar_to_dec(char hexchar) {
-	if     ( hexchar >= '0' && hexchar <= '9' )
-		return hexchar - 48;
-	else if( hexchar >= 'A' && hexchar <= 'F' )
-		return hexchar - 55;
-	else return 16;
-}
-long int max(long int a, long int b) {
-	if( a > b ) return a;
-	return b;
 }
 
 void expand_arpeggio(Note_Node **start, Note_Node **tail, Effect_Package effect) {

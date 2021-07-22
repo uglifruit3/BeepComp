@@ -419,7 +419,8 @@ unsigned int validate_macrodef(int no_buffer_elements, char **buffer, int macro_
 		fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "%s macro missing definition.\n", line_number, mtype);
 		print_error_line(line, line_number, buffer[1]);
 		return FALSE;
-	} else if( buffer[2][0] != open_char || buffer[no_buffer_elements-1][strlen(buffer[no_buffer_elements-1])-1] != close_char ) {
+	} else if( buffer[2][0] != open_char || 
+			buffer[no_buffer_elements-1][strlen(buffer[no_buffer_elements-1])-1] != close_char ) {
 		fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "%s macro incorrectly defined.\n", line_number, mtype);
 		print_error_line(line, line_number, line);
 		return FALSE;
@@ -449,7 +450,8 @@ unsigned int validate_macrodef(int no_buffer_elements, char **buffer, int macro_
 
 	int exit = TRUE;
 	for( i = 0; i < no_temp_elements; i++ ) {
-		if( atoi(temp_buffer[i]) == 0 && strcmp(temp_buffer[i], "0") ) { 
+		if( atoi(temp_buffer[i]) == 0 && 
+				(strcmp(temp_buffer[i], "0]") && strlen(temp_buffer[i]) != 1 )) { 
 			fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "arpeggio macro definition contains invalid parameters.\n", line_number);
 			print_error_line(line, line_number, temp_buffer[i]);
 			exit = FALSE;
@@ -521,7 +523,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 				*buffer = line_elements;
 				*buffer_elements = no_line_elements;
 				stat = FAILED;
-			} else { //free_array(line_elements, no_line_elements);
+			} else { 
 				for( int i = 0; i < no_line_elements; i++ ) { free(line_elements[i]); }
 				free(line_elements);
 			}
@@ -543,6 +545,17 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 		temp_buffer[i] = malloc(32*sizeof(char));
 		memset(temp_buffer[i], '\0', 32);
 		strncpy(temp_buffer[i], line_elements[i], 32);
+		void *arp = parse_arp_macro(temp_buffer[i], Arp_Macros);
+	  if( *(int*)arp == FAILED || *(int*)arp == 2*FAILED ) {
+			if( *(int*)arp == FAILED ) fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "undefined arpeggio macro in note.\n", line_number);
+			else fprintf(stderr, ANSI_BOLD "Error on line %i: " ANSI_RESET "note contains two arpeggio macros.\n", line_number);
+			print_error_line(line, line_number, line_elements[i]);
+			for( int j = 0; j <= i; j++ ) { free(temp_buffer[j]); }
+			free(temp_buffer);
+			*buffer = line_elements;
+			*buffer_elements = no_line_elements;
+			return FAILED;
+		}
 	}
 	stat = validate_buffer(no_line_elements, temp_buffer);
 	free_array(temp_buffer, no_line_elements);
@@ -614,10 +627,12 @@ Note_Node *convert_from_string(char *string, Key_Map *keymap, int **freq_table, 
 
 void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node **tail, Key_Map *keymap, int **freq_table, double tempo) {
 	Effect_Package effect;
+	void *custom_arp_macro;
 	Note_Node *int_rep;
 
 	for( int i = 0; i < buff_size; i++ ) {
 		effect = parse_effects_macros(buffer[i]);
+		custom_arp_macro = parse_arp_macro(buffer[i], Arp_Macros);
 
 		if( effect.name ) {
 			/* param1 is the same for all effects */
@@ -637,6 +652,11 @@ void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node
 			Note_Node *temp_rep = convert_from_string(buffer[i], keymap, freq_table, tempo);
 			(*tail)->duration += temp_rep->duration;
 			free(temp_rep);
+
+		} else if( *(int*)custom_arp_macro != NONE ) {
+			Note_Node *base_note = convert_from_string(buffer[i], keymap, freq_table, tempo);
+			expand_arp_macro(base_note, (Macro_Node*)custom_arp_macro, start, tail, Arpeggio_Rate); 
+			free(base_note);
 
 		/* regular case */
 		} else {
@@ -730,7 +750,7 @@ unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **fre
 		free_array(buffer, no_buff_elements);
 	}
 
-	if( elements == FAILED && outfile != stdout ) {
+	if( elements == FAILED && infile != stdin ) {
 		free_array(buffer, no_buff_elements);
 		fprintf(stderr, "Input not succesfully written to file.\n");
 		exit = ERROR_EXIT;

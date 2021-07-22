@@ -129,16 +129,31 @@ BeepComp expands an arpeggio to play at a rate of 60 tones per second by default
 
 The only effects macro currently supported is arpeggiation. See Limitations for an explanation of why.
 
-### Custom Text Macros
-Users may define and invoke one-line, plaintext macros. Definition is accomplished using the `define` keyword, followed by the name of the macro prefaced with a '$' character, and the macro itself enclosed in double quotes. Like a command, macro definitions must occupy their own, singular line.
-
-* For example, one could create a macro for a certain repetitive phrase like so: `define $macro1 "^^( C4 E4 D4 C5 D4 E4 C4 E4 D4 C5 D4 E4 )"`
+### Custom Macros
+BeepComp allows the definition and invocation of plain text and custom arpeggio macros. They obey the following behavior:
+* Definition begins with the `define` keyword, followed by a macro name and macro definition.
+* Macro definitions must reside on their own line, in the same way a command must.
+* For plain text macros, macro names must begin with a '$' character and definitions must be enclosed in double quotes.
+* For custom arpeggios, macro names must begin with a '@' character and definitions must be enclosed in square braces.
+* If a previously defined macro is defined again, its contents will be overwritten.
+* Macro definitions are not sensitive to blank space (e.g. `"A4 A5"` and `" A4 A5 "` are equally valid).
+#### Plain Text Macros
+Plain text macros deal with storing and expanding raw text.
+* For example, one could create a macro for a certain repetitive phrase like so: `define $macro1 "^^( C4 E4 D4 C5 D4 E4 C4 E4 D4 C5 D4 E4 )"`. Upon invocation, this text will be inserted into a line and then parsed by BeepComp.
 
 To invoke a macro, the macro name (again prefaced with a '$' character) is placed anywhere a note element would normally go.
 
 * `A4, A4 $macro1 ^( $macro1 )` would expand the contents of $macro1 once, then expand them again within the parentheses, doubling the rate at which the notes are played.
 
-If a previously defined macro is defined again, its contents will be overwritten. Note that BeepComp does not validate the contents of a text macro, but expands them within a line and proceeds to check that line for errors. This also means that the notes in the macro, when expanded, will be processed according to whatever tempo and key signature have already been defined.  
+Note that BeepComp does not validate the contents of a text macro, but expands them within a line and proceeds to check that line for errors. This also means that the notes in the macro, when expanded, will be processed according to whatever tempo and key signature are currently defined. Additionally, this allows macro definitions to contain other macro invocations, which may not need to be defined then and which may be redefined whenever.
+
+#### Custom Arpeggio Macros
+Custom arpeggio macros are useful for surpassing the limitations of the built-in arpeggio macros (no steps beneath original note, limit of 15 half steps above original note, 3 notes only), and are invoked in the same way. Definitions consist of specified half step intervals that the arpeggio will play. Half step intervals are specified in base 10 and are separated by spaces.
+
+* For example, one could create a custom arpeggio macro like so: `define @macro1 [4 7 12 7 4 0 -4 -7 -12 -7 -4 0]`. The macro can then be invoked where a built-in arpeggio macro would be in a note.
+* `C4,@macro1 C5,@macro1` invokes the arpeggio macro twice on two different notes.
+
+Note that custom arpeggio macros will be processed according to the current arprate value.
 
 ### Comments
 BeepComp notation includes a means to make comments for helping with song structure/organization. The percent ('%') character is the reserved comment character, and BeepComp will ignore all input on a line after it is detected. BeepComp also ignores blank lines.
@@ -199,6 +214,4 @@ A4[47] A4^*[49] Gb5, % still alive
 * Portamento and vibrato effects macros were originally envisioned to accompany arpeggiation. However, these effects are based on bending the pitch of a note, and `beep` does not allow smooth transitions between frequencies. From what I can tell, there is something somewhere in software that turns off the PC speaker between tones, rather than allowing it to transition between frequencies while remaining turned on. This makes any attempt at rapidly and smoothly switching tones sound like a saw running and is not worth using for much of anything. Any edifying clarifications on how interactions between the operating system and speaker hardware are handled at a low level are greatly appreciated. Working out smooth transitions between tones--either with `beep`, or something else entirely--would open a great deal of possibilities for making music on the PC speaker.
 * To do:
   * Improve the quality and accuracy of error reporting messages.
-  * Create a feature that allows users to define their own macros consisting of legal note syntax.
-  * Create a custom arpeggio feature that allows users to define arpeggios with less or greater than three notes that may go beneath the first one.
   * Investigate other means of beeping the PC speaker, in pursuit of eventually being able to transition between pitches and implement portamento/vibrato effects.
