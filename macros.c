@@ -48,7 +48,14 @@ void store_macro(char *line, Macro_Node **macro_list) {
 	for( int i = 2; i < no_line_elements; i++ ) {
 		if( i == 2 ) {
 			if( strlen(line_elements[i]) == 1 ) continue;
-			else {
+			else if( no_line_elements == 3 ) { 
+				int j = 1;
+				while( line_elements[i][j] != '\"' ) {
+					macro->macro[j-1] = line_elements[i][j];
+					j++;
+				}
+				break;
+			} else {
 				int j = 1;
 				while( line_elements[i][j] != '\0' ) {
 					macro->macro[j-1] = line_elements[i][j];
