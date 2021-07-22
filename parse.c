@@ -60,7 +60,10 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
 			switch( cmdline_args[i][1] ) {
 				case 'o':
 					i++;
-					if( i > no_args-1 ) { continue; }
+					if( i > no_args-1 ) { 
+						printf(ANSI_BOLD "Note: " ANSI_RESET "output file not specified. Defaulting to stdout.\n");
+						continue;
+					}
 					*out = fopen(cmdline_args[i], "w");
 					*out_name = cmdline_args[i];
 					break;
@@ -73,7 +76,7 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
 					help_flag = TRUE;
 					break;
 				default:
-					printf(ANSI_BOLD "Error: " ANSI_RESET "invalid options have been supplied.\n");
+					fprintf(stderr, ANSI_BOLD "Error: " ANSI_RESET "invalid options have been supplied.\n");
 					error_flag = TRUE; 
 					break;
 			}
@@ -82,6 +85,7 @@ unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **o
 
 	if( error_flag || help_flag ) {
 		if( error_flag && *in == NULL ) {
+			fprintf(stderr, ANSI_BOLD "Error: " ANSI_RESET "input file does not exist.\n");
 			return ERROR_EXIT;
 		}
 		printf("Usage: beepcomp [-h] [-f " ANSI_UNDR "infile" ANSI_RESET "] [-o " ANSI_UNDR "outfile" ANSI_RESET "]\n" );
