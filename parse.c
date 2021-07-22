@@ -682,6 +682,11 @@ void write_to_file(Note_Node *representation, FILE *outfile, Note_Node *tail) {
 	fprintf(outfile, "#!/bin/sh\nbeep ");
 	fprintf(outfile, "-f %d -l %f ", temp->frequency, temp->duration);
 	temp = temp->next;
+	/* handles case of representation consisting of only one node */
+	if( temp == NULL ) {
+		fprintf(outfile, "\n");
+		return;
+	}
 
 	/* list traversal */
 	int silent_time = FALSE;
