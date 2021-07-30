@@ -22,7 +22,7 @@ This is an amateur project; having undertaken it with no notable prior experienc
 -----------------
 The included makefile performs all actions necessary for installation. Clone the repository to your machine, navigate to it, and run 
 ```
-# make install
+# make install clean
 ```
 Naturally, one should also have `beep` installed for BeepComp to be of much use.
 

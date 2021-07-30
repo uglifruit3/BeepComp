@@ -54,7 +54,7 @@ int** gen_freq_table(double tuning_A) {
 	return freq_table;
 }
 
-int get_freq_from_string(char note[3], int** table) {
+int get_freq_from_string(char *note, int** table) {
 	/* using the reference row in the frequency table to find the correct note */
 	if( note[0] == 'r' ) return 0;
 	int note_index;
@@ -88,7 +88,6 @@ void *gen_key_sig(char *key_string) {
 	/* pointer to return values */
 	void *out_ptr;
 	int error = ARG_ERROR;
-	int empty_struct = NORMAL;
 
 	/* tokenizing input */
 	if( strlen(key_string) < 3 ) { out_ptr = &error; return out_ptr; }

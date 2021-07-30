@@ -19,7 +19,7 @@ void add2end(Note_Node **start, Note_Node **tail, Note_Node *new) {
 void traverse(Note_Node *list) {
 	Note_Node *temp = list;
 	while( temp != NULL ) {
-		printf("%d - %d\n", temp->frequency, temp->duration);
+		printf("%d - %02f\n", temp->frequency, temp->duration);
 		temp = temp->next;
 	}
 }
@@ -53,7 +53,6 @@ void free_array(char **array, int no_elements) {
 unsigned int parse_cmdline(char **cmdline_args, int no_args, FILE **in, FILE **out, char **out_name) {
 	int error_flag = FALSE;
 	int help_flag = FALSE;
-	int quiet_flag = FALSE;
 
 	for( int i = 1; i < no_args; i++ ) {
 		if( cmdline_args[i][0] == '-' ) {
@@ -187,7 +186,7 @@ unsigned int argchecker(char *argument, const char *format) {
 
 unsigned int validate_command(char *command, char *argument) {
 	int i = 0;
-	while( commands[i] != "\0" ) {
+	while( commands[i][0] != '\0' ) {
 		/* strcmp is negated because it returns zero if it identifies a match */
 
 		/* this block specifically validates the argument to set key.
@@ -328,8 +327,9 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 		/* call to parse_effects_macros sanitizes the buffer, and
 		 * prevents this function from flagging effects macros as 
 		 * errors as it otherwise would */
-		Effect_Package temp; temp.name = NO_EFFECT;
-		temp = parse_effects_macros(buffer[i]);
+		//Effect_Package temp; temp.name = NO_EFFECT;
+		//temp = parse_effects_macros(buffer[i]);
+		parse_effects_macros(buffer[i]);
 
 		/* this block of if's and else's confirm the presence of a 
 		 * note and octave, then the validity of time mods in that
@@ -350,7 +350,7 @@ unsigned int validate_buffer(int no_buffer_elements, char **buffer) {
 						else time_mod = buffer[i][time_pos];
 						for( int j = time_pos; j < strlen(buffer[i]); j++ ) {
 							if( buffer[i][j] != time_mod ) { 
-								if( buffer[i][j] == '.' ) time_mod == '.'; 
+								if( buffer[i][j] == '.' ) time_mod = '.'; 
 								else if( buffer[i][j] == '*' && buffer[i][j+1] == '\0' ) continue;
 								else { status = i+1; break; }
 							}
@@ -439,7 +439,7 @@ unsigned int validate_macrodef(int no_buffer_elements, char **buffer, int macro_
 
 	char **temp_buffer = malloc(no_temp_elements*sizeof(char*));
 	int temp_start = i;
-	for( i; i < no_temp_elements+temp_start; i++ ) {
+	for( ; i < no_temp_elements+temp_start; i++ ) {
 		temp_buffer[i-temp_start] = malloc(32*sizeof(char));
 		memset(temp_buffer[i-temp_start], '\0', 32);
 		if( i == 2 ) {
@@ -509,6 +509,7 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 
 	/* this switch handles checking the line for commands first */
 	int stat = parse_command_or_macrodef(line, line_number);
+	int is_valid;
 	switch ( stat ) {
 		case NONE:
 			break;
@@ -522,8 +523,8 @@ unsigned int get_line_buffer(char *line, int line_number, char ***buffer, int *b
 			return FAILED;
 		case CUS_MDEF:
 		case ARP_MDEF:
-			int valid = validate_macrodef(no_line_elements, line_elements, stat, line, line_number);	
-			if( !valid ) {
+			is_valid = validate_macrodef(no_line_elements, line_elements, stat, line, line_number);	
+			if( !is_valid ) {
 				*buffer = line_elements;
 				*buffer_elements = no_line_elements;
 				stat = FAILED;
@@ -704,71 +705,3 @@ void write_to_file(Note_Node *representation, FILE *outfile, Note_Node *tail) {
 	fprintf(outfile, "-n -f %d -l %f -D 0\n", temp->frequency, temp->duration);
 }
 
-unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **freq_table, Key_Map **key) {
-	/* initializing line array (updated every iteration) */
-	char *line = malloc(256*sizeof(char));
-	char *stat;
-	int line_number = 0;
-
-	/* initializing linked list for intermediate rep */
-	unsigned int linked_list_nodes = 0;
-	Note_Node *Notes_Array = NULL;
-	Note_Node *tail = NULL;
-	Arp_Macros = Cus_Macros = NULL;
-
-	/* initializing buffer */
-	char **buffer = NULL;
-	int elements = 0;
-	int no_buff_elements;
-
-	/* this loop cycles through each line of input, builds a
-	 * buffer from it, then converts it into an intermediate
-	 * representation */
-	int exit = NORMAL_EXIT;
-	while( 1 ) {
-		fflush(stdin);
-		line_number++;
-		stat = fgets(line, 256, infile);
-		if( stat == NULL ) break; /* breaks at EOF */
-		if( line[0] == '\n' || line[0] == COMMENT_CHAR ) continue; 
-		line[strlen(line)-1] = '\0'; 
-
-		elements = get_line_buffer(line, line_number, &buffer, &no_buff_elements);
-		if( elements == FAILED ) { 
-			if( infile == stdin ) { 
-				free_array(buffer, no_buff_elements);
-				continue;
-			} else { exit = ERROR_EXIT; break; }
-		} else if( elements == COMMAND ) { 
-			if     ( !strcmp(buffer[1], "tempo") )    command_tempo(atoi(buffer[2]), &Tempo);
-			else if( !strcmp(buffer[1], "key") )      command_key(buffer[2], buffer[3], *Key_Str, key);
-			else if( !strcmp(buffer[1], "arprate") )  command_arprate(atoi(buffer[2]), &Arpeggio_Rate);
-			else if( !strcmp(buffer[1], "staccato") ) command_staccato(atof(buffer[2]), &Staccato_Time);
-
-			free_array(buffer, no_buff_elements);
-			continue;
-		} else if( elements == ARP_MDEF ) {
-			store_macro(line, &Arp_Macros);
-			continue;
-		} else if( elements == CUS_MDEF ) {
-			store_macro(line, &Cus_Macros);
-			continue;
-		}
-		/* building intermediate representation from buffer */	
-		buffer_to_intrep(buffer, no_buff_elements, &Notes_Array, &tail, *key, freq_table, Tempo);
-		free_array(buffer, no_buff_elements);
-	}
-
-	if( elements == FAILED && infile != stdin ) {
-		free_array(buffer, no_buff_elements);
-		fprintf(stderr, "Input not succesfully written to file.\n");
-		exit = ERROR_EXIT;
-	}
-	else if( Notes_Array != NULL ) write_to_file(Notes_Array, outfile, tail);
-
-	free(line);
-	free_list(&Notes_Array, &tail); 
-	m_free_list(&Arp_Macros);
-	m_free_list(&Cus_Macros);
-	return exit;
-}

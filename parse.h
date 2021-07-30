@@ -95,6 +95,5 @@ Note_Node *convert_from_string(char *string, Key_Map *keymap, int **freq_table, 
 void buffer_to_intrep(char **buffer, int buf_size, Note_Node **start, Note_Node **tail, Key_Map *keymap, int **freq_table, double tempo);
 
 void write_to_file(Note_Node *representation, FILE *outfile, Note_Node *tail);
-unsigned int parse_infile(FILE *infile, FILE *outfile, char **Key_Str, int **freq_table, Key_Map **key);
 
 #endif

@@ -54,9 +54,9 @@ void store_macro(char *line, Macro_Node **macro_list) {
 	char **line_elements = get_elements_array(line, no_line_elements);
 	strncpy(macro->name, line_elements[1], 32);
 
-	char open_char, close_char;;
-	if( macro->name[0] == '$' )   open_char =      close_char = '\"';
-	else                        { open_char = '['; close_char = ']'; } 
+	char close_char;
+	if( macro->name[0] == '$' ) close_char = '\"';
+	else                        close_char = ']';  
 	for( int i = 2; i < no_line_elements; i++ ) {
 		if( i == 2 ) {
 			/* isolated open character */
@@ -321,14 +321,12 @@ int expand_parens(char **line_elements, int *no_line_elements, char *line, int l
 
 	/* expanding notes' time mods within parens */
 	if( exit_status != FAILED ) {
-		Note_Node *o_temp = open_tail;
-		Note_Node *c_temp = close_tail;
 		int local_time_mods = 0;
 		int paren_counter = no_open_parens;
 		while( paren_counter > 0 ) {
-			local_time_mods = o_temp->NO_TIME_MODS;	
+			local_time_mods = open_tail->NO_TIME_MODS;	
 			int i;
-			for( i = o_temp->INDEX+1; line_elements[i][0] != ')'; i++ ) {
+			for( i = open_tail->INDEX+1; line_elements[i][0] != ')'; i++ ) {
 				int length = strlen(line_elements[i]);
 				if( line_elements[i][0] == '-' && line_elements[i][1] == '\0' ) continue;
 				char cpy[32]; strncpy(cpy, line_elements[i], 32);
@@ -365,23 +363,17 @@ int expand_parens(char **line_elements, int *no_line_elements, char *line, int l
 				strcat(line_elements[i], macro_temp);
 			}
 			/* cleaning up */
-			line_elements[i][0] = line_elements[o_temp->INDEX][0] = '\0';
+			line_elements[i][0] = line_elements[open_tail->INDEX][0] = '\0';
 			del_from_end(&open_parens, &open_tail);
 			del_from_end(&close_parens, &close_tail);
 			paren_counter--;
-			o_temp = open_tail;
-			c_temp = close_tail;
 		}
 	} else {
-		Note_Node *o_temp = open_tail;
-		Note_Node *c_temp = close_tail;
 		int paren_counter = no_open_parens;
 		while( paren_counter > 0 ) {
 			del_from_end(&open_parens, &open_tail);
 			del_from_end(&close_parens, &close_tail);
 			paren_counter--;
-			o_temp = open_tail;
-			c_temp = close_tail;
 		}
 	}
 
