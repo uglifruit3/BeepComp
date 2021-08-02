@@ -8,10 +8,10 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define A4 440.0 /* Note A right above middle C is 440 hz */
+#define A4              440.0 /* Note A right above middle C is 440 hz */
 #define TUNING_A_OCTAVE 4
-#define CONST_A 1.059463094
-#define ROWS_IN_TABLE 10
+#define CONST_A         1.059463094
+#define ROWS_IN_TABLE   10
 
 /* Struct for storing information about key signatures.
  * For use in the functions gen_key_sigs and get_key_info_from string */
