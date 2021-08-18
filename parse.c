@@ -467,15 +467,19 @@ unsigned int validate_macrodef(int no_buffer_elements, char **buffer, int macro_
 }
 
 unsigned int get_no_elements(char *string) {
-	/* helps resolve floating spaces at the ends of lines */
+	/* helps resolve floating spaces at the start and end of lines */
 	int back_index = strlen(string)-1;
 	while( string[back_index] == ' ' ) { 
 		string[back_index] = '\0';
 		back_index--;
 	}
+	back_index = 0;
+	while( string[back_index] == ' ' || string[back_index] == '\t' ) {
+		back_index++;
+	}
 	/* identify number of elements in the line separated by spaces */
 	int no_line_elements = 0;
-	for( int i = 0; i < strlen(string); i++ ) {
+	for( int i = back_index; i < strlen(string); i++ ) {
 		if( string[i] == COMMENT_CHAR && string[i-1] == ' ' ) { no_line_elements--; break; }
 		else if( string[i] == ' ' ) { 
 			no_line_elements++;
@@ -488,6 +492,9 @@ unsigned int get_no_elements(char *string) {
 char **get_elements_array(char *line, int no_elements) {
 	char **line_elements = malloc(no_elements*sizeof(char*));
 	int pos_in_line = 0;
+	while( line[pos_in_line] == ' ' || line[pos_in_line] == '\t' )
+		pos_in_line++;
+
 	for( int i = 0; i < no_elements; i++ ) {
 		line_elements[i] = malloc(32*sizeof(char));
 		memset(line_elements[i], '\0', 32);
@@ -702,7 +709,8 @@ void write_to_file(Note_Node *representation, FILE *outfile, Note_Node *tail) {
 		temp = temp->next;
 	}
 	fprintf(outfile, "-D %i \\\n", silent_time);
-	fprintf(outfile, "-n -f %d -l %f -D 0\n", temp->frequency, temp->duration);
+	if( temp->frequency != FALSE )
+			fprintf(outfile, "-n -f %d -l %f -D 0\n", temp->frequency, temp->duration);
 }
 
 unsigned int read_input(FILE *infile, FILE *outfile, char **Key_Str, int **freq_table, Key_Map **key) {
