@@ -688,7 +688,10 @@ void buffer_to_intrep(char **buffer, int buff_size, Note_Node **start, Note_Node
 void write_to_file(Note_Node *representation, FILE *outfile, Note_Node *tail) {
 	Note_Node *temp = representation;
 	fprintf(outfile, "#!/bin/sh\nbeep ");
-	fprintf(outfile, "-f %d -l %f ", temp->frequency, temp->duration);
+	if( temp->frequency == false )
+		fprintf(outfile, "-f %d -l %f ", 1, temp->duration);
+	else
+		fprintf(outfile, "-f %d -l %f ", temp->frequency, temp->duration);
 	temp = temp->next;
 	/* handles case of representation consisting of only one node */
 	if( temp == NULL ) {
